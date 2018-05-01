@@ -1,0 +1,14 @@
+<h2>Manage your instance</h2>
+
+<%= form_for @conn, manage_path(@conn, :send_token), [as: :login], fn f -> %>
+  <div class="form-group">
+    <%= label f, :domain, "Instance domain" %>
+    <%= text_input f, :domain, class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= label f, :email, "Email address" %>
+    <%= text_input f, :email, class: "form-control" %>
+  </div>
+  <%= submit "Login", class: "btn btn-default" %>
+<% end %>
+

@@ -1,0 +1,5 @@
+<h2>New Instance</h2>
+
+<%= render "form.html", Map.put(assigns, :action, instance_path(@conn, :create)) %>
+
+<span><%= link "Back", to: instance_path(@conn, :index) %></span>

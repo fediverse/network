@@ -1,0 +1,85 @@
+<h2><%= @title %></h2>
+
+<p>
+<strong>Status</strong>:
+<%= link "Up", to: instance_path(@conn, :index), class: active_class_bool(@filters["up"]) %>
+&nbsp;<%= display_stat(@stats,:mini, ["instances", "up"]) %> | 
+<%= link "Down", to: instance_down_path(@conn, :index), class: active_class_bool(@filters["up"] == false) %> 
+&nbsp;<%= display_stat(@stats,:mini, ["instances", "down"]) %> | 
+<%= link "Newest", to: instance_newest_path(@conn, :index), class: active_class_bool(@filters["age"] == "newest") %> |
+<%= link "All", to: instance_all_path(@conn, :index), class: active_class_bool(@filters["up"] == nil) %>
+<br />
+<strong>Servers</strong>:
+<%= link "All", to: instance_path(@conn, :index), class: active_class_bool(@filters["server"] == nil) %> | 
+<%= link "Mastodon", to: instance_server_path(@conn, :index, "mastodon"), class: active_class_bool(@filters["server"]== "mastodon") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 2, "instances", "up"]) %> | 
+<%= link "Pleroma", to: instance_server_path(@conn, :index, "pleroma"), class: active_class_bool(@filters["server"] =="pleroma") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 3, "instances", "up"]) %> | 
+<%= link "GNU Social", to: instance_server_path(@conn, :index, "gnusocial"), class: active_class_bool(@filters["server"]== "gnusocial") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 1, "instances", "up"]) %> | 
+<%= link "Hubzilla", to: instance_server_path(@conn, :index, "hubzilla"), class: active_class_bool(@filters["server"]=="hubzilla") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 5, "instances", "up"]) %> | 
+<%= link "Friendica", to: instance_server_path(@conn, :index, "friendica"), class: active_class_bool(@filters["server"]== "friendica") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 7, "instances", "up"]) %> | 
+<%= link "PostActiv", to: instance_server_path(@conn, :index, "postactiv"), class: active_class_bool(@filters["server"]== "postactiv") %>
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 6, "instances", "up"]) %> | 
+<%= link "PeerTube", to: instance_server_path(@conn, :index, "peertube"), class: active_class_bool(@filters["server"] == "peertube") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 4, "instances", "up"]) %> | 
+<%= link "Kroeg", to: instance_server_path(@conn, :index, "kroeg"), class: active_class_bool(@filters["server"] =="kroeg") %> 
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 8, "instances", "up"]) %> | 
+<%= link "Other", to: instance_server_path(@conn, :index, "unknown"), class: active_class_bool(@filters["server"] == "unknown") %>
+&nbsp;<%= display_stat(@stats,:mini, ["per_server", 0, "instances", "up"]) %> 
+<br />
+<%= if @filters["server"] && @filters["server"]!="known" do %>
+  Users: <%= display_stat(@stats, :inline, ["per_server", Fd.ServerName.to_int(@filters["server"]), "users", "up"]) %>
+  &nbsp;- Statuses: <%= display_stat(@stats, :inline, ["per_server", Fd.ServerName.to_int(@filters["server"]), "statuses", "up"]) %>
+<% else %>
+  Users: <%= display_stat(@stats, :inline, ["users", "up"]) %> - Statuses: <%= display_stat(@stats, :inline, ["statuses", "up"]) %>
+<% end %>
+
+<table class="table table-condensed">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Instance</th>
+      <th>Server</th>
+      <th>Users</th>
+      <th>Statuses</th>
+      <th>Peers</th>
+      <th>Signup</th>
+      <%= if @filters["emojis"] do %>
+        <th>Emojis</th>
+      <% end %>
+      <%= if @filters["age"] do %>
+        <th>Age</th>
+      <% end %>
+
+    </tr>
+  </thead>
+  <tbody>
+  <%= for instance <- @instances do %>
+    <tr>
+      <td><span class="badge badge-up-<%= to_string(instance.up) %>">&nbsp;</span></td>
+      <td><%= if instance.hidden do %>
+        <i class="text-muted">private</i>
+      <% else %>
+        <%= link name(instance), to: instance_path(@conn, :show, instance) %>
+      <% end %>
+      <%= if instance.dead, do: content_tag(:sup, "☨") %>
+      <%= if instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
+      </td>
+      <td><%= Fd.ServerName.from_int(instance.server) %> <%= instance.version %></td>
+      <td><%= instance.users %></td>
+      <td><%= instance.statuses %></td>
+      <td><%= instance.peers %></td>
+      <td><%= inspect(instance.signup) %></td>
+      <%= if @filters["emojis"] do %>
+        <td><%= instance.emojis %></td>
+      <% end %>
+      <%= if @filters["age"] do %>
+        <td><%= instance.inserted_at %></td>
+      <% end %>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

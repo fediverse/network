@@ -1,0 +1,47 @@
+/* This file is for your main application css. */
+
+@font-face {
+  font-family: 'Work Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: url(/fonts/WorkSans-Regular.woff2) format('woff2'), url(/fonts/WorkSans-Regular.ttf) format('ttf');
+}
+@font-face {
+  font-family: 'Work Sans';
+  font-style: normal;
+  font-weight: bold;
+  src: url(/fonts/WorkSans-SemiBold.woff2) format('woff2'), url(/fonts/WorkSans-SemiBold.ttf) format('ttf');
+}
+
+
+/* FF fix for .table.table-responsive */
+@-moz-document url-prefix() {
+  fieldset { display: table-cell; }
+}
+
+* {
+  font-family: 'Work Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+}
+
+a.active {
+  font-weight: bold;
+}
+
+.badge.badge-up-true {
+  background-color: green;
+}
+.badge.badge-up-false {
+  background-color: red;
+}
+
+footer {
+  margin-top: 4rem;
+  font-size: 1.2rem;
+}
+
+thead, th {
+  position: sticky;
+  -webkit-position: sticky;
+  top: 0;
+  background: #fff;
+}

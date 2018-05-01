@@ -1,0 +1,27 @@
+<h2>Manage <%= Fd.Util.idna(@instance.domain) %></h2>
+
+<%= form_for @changeset, manage_path(@conn, :update), fn f -> %>
+  <div class="form-group">
+    <label>
+      <%= checkbox f, :monitor %>
+      Enable <a href="/monitoring">monitoring</a> (requests every 1-2 minutes) and alerts you by e-mail when down
+      <%= if @instance.monitor do %>
+        <br />
+        <small class="text-muted">
+          This service is totally free but <a href="https://liberapay.com/href">please consider supporting</a> our hosting fees! :)
+        </small>
+      <% end %>
+    </label>
+  </div>
+  <div class="form-group">
+    <label>
+      <%= checkbox f, :hidden %>
+      Hide instance domain/name/link in listings
+      <br><small class="text-muted">
+        Warning: this setting may be overwritten by your instance API (<a href="/info#private">more info</a>).
+        </small>
+    </label>
+  </div>
+  <%= submit "Save", class: "btn btn-primary" %>
+  <%= link("Logout", to: manage_path(@conn, :logout), class: "btn btn-danger") %>
+<% end %>

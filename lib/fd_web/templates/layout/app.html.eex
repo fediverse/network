@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title><%= title(@conn, "The Fediverse Network") %></title>
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <header class="header">
+        <nav role="navigation">
+          <ul class="nav nav-pills pull-right">
+            <li><a href="/">instances</a></li>
+            <li><a href="/tld">TLDs</a></li>
+          </ul>
+        </nav>
+        <h1><a href="/">fediverse network</a></h1>
+      </header>
+
+      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+
+      <main role="main">
+        <%= render @view_module, @view_template, assigns %>
+      </main>
+
+
+      <footer role="footer">
+        <p class="text-muted">
+          Built and maintained by <a href="https://soc.ialis.me/@href">@href@soc.ialis.me</a>.
+          Very alpha software, results may be incorrect.
+          <br />
+          <a href="/info">More info / how it works</a>.
+          &nbsp;
+          <a href="/checks">Latest checks</a>.
+          &nbsp;
+          <a href="/monitoring">Instance monitoring</a>.
+          &nbsp;
+          <strong><a href="/manage">Manage your instance</a></strong> (enable monitoring, hide from listings).
+          <br />
+          <br />
+          <strong>Follow fediverse.network on the fediverse:</strong>
+          <a href="https://pleroma.fr/users/fediversenetwork">News/Info (@fediversenetwork@pleroma.fr)</a>
+          &nbsp;-&nbsp;
+          <a href="https://pleroma.fr/users/fediverse">Watch (new instances, upgrades, …) (@fediverse@pleroma.fr)</a>
+          &nbsp;-&nbsp;
+          <a href="https://pleroma.fr/users/fediversemonitoring">Monitoring (up/down) (@fediversemonitoring@pleroma.fr)</a>
+          <br />
+          <br />
+          Instance missing? Send a message from it to `@href@pleroma.fr` or `@href@soc.ialis.me` so the crawler will pick it up quickly.
+          <br />
+          <br />
+          Total counts are <strong>NOT</strong> entierly representative of the fediverse as some servers does not
+          returns all needed statistics.<br />
+          <br />
+          <strong>Comments, questions, … ?</strong> irc.random.sh +6697 #random, #random:random.sh (Matrix), href (at)
+          random.sh.
+          </p>
+      </footer>
+    </div> <!-- /container -->
+    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u="//matomo.adm.random.sh/";
+        _paq.push(['setTrackerUrl', u+'/js/index.php']);
+        _paq.push(['setSiteId', '12']);
+        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'/js/p.min.js'; s.parentNode.insertBefore(g,s);
+      })();
+    </script>
+    <img src="https://matomo.adm.random.sh/js/index.php?idsite=12&rec=1" style="border:0" alt="" />
+
+  </body>
+</html>

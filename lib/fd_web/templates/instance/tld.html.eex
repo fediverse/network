@@ -1,0 +1,25 @@
+<h2>Instances per TLD</h2>
+
+<p><%= link "List by domains", to: instance_path(@conn, :domain) %>.</p>
+
+<div class="rows">
+  <%= for {tld, stats} <- Map.get(@stats, "tlds") do %>
+    <div class="col-md-2" style="height: 250px;">
+      <h3><strong><%= link [".", idna(tld)], to: instance_tld_path(@conn, :index, idna(tld)) %></strong>&nbsp;
+        <span class="text-success"><%= Map.get(stats, "up", "?") %></span>
+        <span class="text-muted">&nbsp;/&nbsp;<%= Map.get(stats, "total", "?") %></span>
+      </h3>
+
+      <ul>
+        <%= for {server, sstats} <- Map.get(stats, "per_server", %{}) |> Enum.sort_by(fn({_,s}) -> Map.get(s,"total",0) end,&>=/2) do %>
+          <%= unless Map.get(sstats, "total", 0) == 0 do %>
+            <li><%= link Fd.ServerName.from_int(server), to: instance_tld_path(@conn, :index, tld, server:
+            Fd.ServerName.from_int(server)|>String.downcase()) %>:
+            <%= Map.get(sstats, "up", "?") %>/<%= Map.get(sstats, "total", "?") %></li>
+          <% end %>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>
+<div class="clearfix">&nbsp;</div>
