@@ -118,6 +118,7 @@ defmodule FdWeb.InstanceController do
     host_stats = Fd.HostStats.get()
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} - #{Fd.ServerName.from_int(instance.server)}")
+    |> assign(:private, instance.hidden)
     |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats)
   end
 

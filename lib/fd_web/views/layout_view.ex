@@ -7,4 +7,10 @@ defmodule FdWeb.LayoutView do
 
   def title(_, site_title), do: site_title
 
+  def private_meta_tag(conn) do
+    if Map.get(conn.assigns, :private, false) do
+      tag(:meta, name: "robots", content: "noindex, nofollow")
+    end
+  end
+
 end
