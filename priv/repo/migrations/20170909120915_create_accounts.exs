@@ -2,6 +2,9 @@ defmodule Fd.Repo.Migrations.CreateAccounts do
   use Ecto.Migration
 
   def change do
+
+    execute "create extension if not exists citext", "drop extension citext"
+
     create table(:accounts) do
       add :username, :citext
       add :visible, :boolean

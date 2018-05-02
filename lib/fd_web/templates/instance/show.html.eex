@@ -5,61 +5,139 @@
     <%= unless @instance.up do %><span class="label label-warning">DOWN</span><% end %>
   <% end %>
 </h2>
-<ul>
 
-  <%= if @instance.dead do %>
-    <li><strong class="text-danger">This instance is closed</strong>.
-      <small>(marked manually or been unavailable for too long).</small></li>
-  <% else %>
-    <%= if @instance.up == false do %>
-      <li><strong class="text-warning">This instance may temporarily unavailable</strong>.<br />
-        <small>The crawler is still in beta and may report incorrect checks. <%= unless @instance.monitor, do: "Also,
-        this instance is only checked one time per hour." %></li>
-    <% end %>
-  <% end %>
-  <li>
-    <strong>Domain:</strong>
-    <%= link idna(@instance.domain), to: "https://#{@instance.domain}", target: "_blank" %>
-  </li>
-  <li>
-    <strong>Server:</strong>
-    <%= link Fd.ServerName.from_int(@instance.server || 0), to: Fd.ServerName.route_path(@instance.server || 0) %>
-    <%= if @instance.server||0 == 0 do %>
-      <br />
-      <i class="text-warning"><strong>Warning:</strong> Instances with an unknown server <strong>may for now not be real instances</strong>-- the
-        crawler is still under development and may stumble upon non-instances. This will be fixed soon.</i>
-    <% end %>
-  </li>
-  <%= if @instance.hidden do %>
-    <li>This is a private instance. <small>Name, domain and links are hidden in lists.</small></li>
-  <% end %>
-  <%= li_item("Version", @instance.version) %>
-  <%= li_item("Users", @instance.users) %>
-  <%= li_item("Statuses", @instance.statuses) %>
-  <%= li_item("Peers", @instance.peers) %>
-  <%= li_item("Emojis", @instance.emojis) %>
-  <%= li_item("Characters limit", @instance.max_chars) %>
-  <%= unless @instance.dead do %>
-    <%= if @instance.signup == true or @instance.signup == false do %>
-      <%= if @instance.signup do %>
-        <li>Open registration</li>
-      <% else %>
-        <li>Closed registration</li>
-      <% end %>
-    <% else %>
-      <li>Registrations state unknown</li>
-    <% end %>
-  <% end %>
-  <li>View other instances on :&nbsp;
-    <%= if @instance.domain_suffix do %><%= link [".", idna(@instance.domain_suffix)], to: instance_tld_path(@conn, :index, idna(@instance.domain_suffix)) %><% end %>
-    <%= if Fd.Domain.total_count(@host_stats, @instance.domain_base) > 1 do %><%= link [idna(@instance.domain_base)], to: instance_domain_path(@conn, :index, idna(@instance.domain_base), up: "all", server: "all") %> <% end %>
-  </li>
-  <%= if @instance.monitor do %>
-    <li>Extended monitoring enabled.</li>
-  <% end %>
-  <li>Found <%= @instance.inserted_at %></li>
+<!-- Bootstrap CSS -->
+<!-- jQuery first, then Bootstrap JS. -->
+<!-- Nav tabs -->
 
+<ul class="nav nav-tabs" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" href="#summary" role="tab" data-toggle="tab">summary</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#graphs" role="tab" data-toggle="tab">graphs</a>
+  </li>
 </ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane fade in active" id="summary">
+    <ul>
+      <%= if @instance.dead do %>
+        <li><strong class="text-danger">This instance is closed</strong>.
+          <small>(marked manually or been unavailable for too long).</small></li>
+      <% else %>
+        <%= if @instance.up == false do %>
+          <li><strong class="text-warning">This instance may temporarily unavailable</strong>.<br />
+            <small>The crawler is still in beta and may report incorrect checks. <%= unless @instance.monitor, do: "Also,
+            this instance is only checked one time per hour." %></li>
+        <% end %>
+      <% end %>
+      <li>
+        <strong>Domain:</strong>
+        <%= link idna(@instance.domain), to: "https://#{@instance.domain}", target: "_blank" %>
+      </li>
+      <li>
+        <strong>Server:</strong>
+        <%= link Fd.ServerName.from_int(@instance.server || 0), to: Fd.ServerName.route_path(@instance.server || 0) %>
+        <%= if @instance.server||0 == 0 do %>
+          <br />
+          <i class="text-warning"><strong>Warning:</strong> Instances with an unknown server <strong>may for now not be real instances</strong>.<br />
+            the crawler is still under development and may stumble upon non-instances. This will be fixed soon.</i>
+        <% end %>
+      </li>
+      <%= if @instance.hidden do %>
+        <li>This is a private instance. <small>Name, domain and links are hidden in lists.</small></li>
+      <% end %>
+      <%= li_item("Version", @instance.version) %>
+      <%= li_item("Users", @instance.users) %>
+      <%= li_item("Statuses", @instance.statuses) %>
+      <%= li_item("Peers", @instance.peers) %>
+      <%= li_item("Emojis", @instance.emojis) %>
+      <%= li_item("Characters limit", @instance.max_chars) %>
+      <%= unless @instance.dead do %>
+        <%= if @instance.signup == true or @instance.signup == false do %>
+          <%= if @instance.signup do %>
+            <li>Open registration</li>
+          <% else %>
+            <li>Closed registration</li>
+          <% end %>
+        <% else %>
+          <li>Registrations state unknown</li>
+        <% end %>
+      <% end %>
+      <li>View other instances on :&nbsp;
+        <%= if @instance.domain_suffix do %><%= link [".", idna(@instance.domain_suffix)], to: instance_tld_path(@conn, :index, idna(@instance.domain_suffix)) %><% end %>
+        <%= if Fd.Domain.total_count(@host_stats, @instance.domain_base) > 1 do %><%= link [idna(@instance.domain_base)], to: instance_domain_path(@conn, :index, idna(@instance.domain_base), up: "all", server: "all") %> <% end %>
+      </li>
+      <%= if @instance.monitor do %>
+        <li>Extended monitoring enabled.</li>
+      <% end %>
+      <li>Found <%= @instance.inserted_at %></li>
+    </ul>
+  </div>
+
+  <div role="tabpanel" class="tab-pane fade" id="graphs">
+    <div class="chart">
+      <canvas id="emojoChart"></canvas>
+      <script>
+      var ctx = document.getElementById("emojoChart").getContext('2d');
+      var myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: <%= inspect(@weeks) %>,
+            datasets: [{
+              label: "N° of statuses per week for the current year",
+              fill: false,
+              borderColor: 'rgb(255, 99, 132)',
+              backgroundColor: 'rgb(255, 99, 132)',
+              data: <%= raw inspect(@statuses) %>,
+              }],
+            options: {
+              scales: {
+                xAxes: [{
+                  type: 'time',
+                  distribution: 'series'
+                }]
+              }
+            }
+          }
+      });
+      </script>
+    </div>
+
+    <div class="chart">
+      <canvas id="userChart"></canvas>
+      <script>
+        var dates = <%= raw Poison.encode!(@months) %>.map(function(date){ return moment(date).format('MMM') });
+        var ctx = document.getElementById("userChart").getContext('2d');
+        var myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: "N° of users",
+              fill: false,
+              borderColor: 'rgb(255, 159, 64)',
+              backgroundColor: 'rgb(255, 159, 64)',
+              data: <%= inspect(@users)%>,
+              }],
+            options: {
+              scales: {
+                xAxes: [{
+                  type: 'time',
+                  distribution: 'series'
+                }]
+              }
+            }
+          }
+      });
+      </script>
+    </div> <!-- chart -->
+  </div>
+</div>
+
+
 
 <table class="table table-condensed">
   <thead>

@@ -1,9 +1,22 @@
 /* This file is for your main application css. */
 
+#tabz h3 {
+  color : white;
+  background-color: #428bca;
+  padding : 5px 15px;
+}
+
+.chart{
+    width: 35%;
+    text-align:center;
+    display: inline-block;
+}
+
 @font-face {
   font-family: 'Work Sans';
   font-style: normal;
   font-weight: 300;
+
   src: url(/fonts/WorkSans-Regular.woff2) format('woff2'), url(/fonts/WorkSans-Regular.ttf) format('ttf');
 }
 @font-face {

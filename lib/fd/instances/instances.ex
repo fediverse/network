@@ -72,6 +72,32 @@ defmodule Fd.Instances do
     |> Repo.one
   end
 
+  def get_instance_users(id) do
+    query = "select distinct on (month) id, users, statuses, date_trunc('month', updated_at) as month, updated_at from instance_checks where instance_id = #{id} limit 12"
+    res = Ecto.Adapters.SQL.query!(Repo, query)
+    get_month = fn(map) -> map
+                          |> Map.get("month")
+                          |> elem(0)
+                          |> elem(1)
+                          end
+
+    data = Enum.map(res.rows, fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
+
+    Enum.map(data, fn d -> Map.put(d, "month", get_month.(d)) end)
+  end
+
+  def get_instance_statuses(id) do
+    query = "select distinct on (week) statuses, extract(week from updated_at) as week from instance_checks where instance_checks.instance_id = #{id} limit 52"
+    res = Ecto.Adapters.SQL.query!(Repo, query)
+    get_month = fn(map) -> map
+                          |> Map.get("week")
+                          end
+
+    data = Enum.map(res.rows, fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
+
+    Enum.map(data, fn d -> Map.put(d, "month", get_month.(d)) end)
+  end
+
 
   def switch_flag(id, flag, bool) when is_boolean(bool) do
     instance = get_instance!(id)

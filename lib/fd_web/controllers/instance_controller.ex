@@ -2,6 +2,7 @@ defmodule FdWeb.InstanceController do
   use FdWeb, :controller
 
   alias Fd.Instances
+  alias Fd.Repo
   alias Fd.Instances.{Instance, InstanceCheck}
   import Ecto.Query, warn: false
 
@@ -107,11 +108,19 @@ defmodule FdWeb.InstanceController do
   end
 
   def show(conn, %{"id" => id}) do
-    instance = Instances.get_instance_by_domain!(id)
-    iid = instance.id
-    checks = from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])
-    |> Fd.Repo.all
+    instance      = Instances.get_instance_by_domain!(id)
+    iid           = instance.id
+    usm           = Instances.get_instance_users(iid)
+    users         = Enum.map(usm, fn r -> r["users"] end)
+    months        = Enum.map(usm, fn r -> r["updated_at"] |> elem(0) |> Date.from_erl! |> Date.to_iso8601 end)
+    checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])
     last_up_check = Instances.get_instance_last_up_check(instance)
+
+    s_w           = Instances.get_instance_statuses(iid)
+    weeks         = Enum.map(s_w, fn s -> trunc(s["week"]) end)
+    statuses      = Enum.map(s_w, fn s -> trunc(s["statuses"]) end)
+
+
     if Application.get_env(:fd, :instances)[:readrepair] do
       Fd.Instances.Server.crawl(instance.id)
     end
@@ -119,7 +128,8 @@ defmodule FdWeb.InstanceController do
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} - #{Fd.ServerName.from_int(instance.server)}")
     |> assign(:private, instance.hidden)
-    |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats)
+    |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats,
+                           users: users, months: months, weeks: weeks, statuses: statuses)
   end
 
   def checks(conn, params) do

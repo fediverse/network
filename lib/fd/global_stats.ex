@@ -20,9 +20,9 @@ defmodule Fd.GlobalStats do
 
   def init(_) do
     Logger.debug "GlobalStats: init"
-    stats = build()
+    GenServer.cast(__MODULE__, :build)
     timer = :erlang.send_after(60_000, self(), :refresh)
-    {:ok, %__MODULE__{timer: timer, stats: stats}}
+    {:ok, %__MODULE__{timer: timer, stats: nil}}
   end
 
   def handle_call(:get, _, state = %{stats: stats}) do
@@ -43,6 +43,11 @@ defmodule Fd.GlobalStats do
   def handle_info({:put, stats}, state) do
     Logger.debug "GlobalStats: stats refreshed"
     {:noreply, %__MODULE__{state | stats: stats}}
+  end
+
+  def handle_cast(:build, state) do
+    stats = build()
+    {:noreply, %{state|stats: stats}}
   end
 
   def build do
@@ -76,6 +81,9 @@ defmodule Fd.GlobalStats do
       }
       Map.put(acc, server_id, data)
     end)
+
+    Logger.info "users: #{inspect users}"
+    Logger.info "up_users: #{inspect up_users}"
 
     %{
       "instances" => %{"total" => total, "up" => up, "down" => total-up},
