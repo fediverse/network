@@ -135,6 +135,7 @@ defmodule Fd.Instances.Crawler do
       domains = state.m_peers || []
       existings = Enum.map(Instances.list_instances_by_domains(domains), fn(i) -> String.downcase(i.domain) end)
       new_domains = domains
+      |> Enum.filter(fn(domain) -> domain end)
       |> Enum.map(fn(domain) ->
         domain = domain
         |> String.trim
