@@ -72,32 +72,48 @@ defmodule Fd.Instances do
     |> Repo.one
   end
 
-  def get_instance_users(id) do
-    query = "select distinct on (month) users, statuses, date_trunc('month', updated_at) as month, updated_at from instance_checks where instance_id = #{id} limit 12"
+  @statistics_intervals %{
+    "5min" => {"5 minutes", 576}, # two days
+    "daily" => {"1 day", 31},
+    "weekly" => {"1 week", 53},
+    "monthly" => {"1 month", 12},
+  }
+  @statistics_intervals_keys Map.keys(@statistics_intervals)
+
+  def get_instance_statistics(id, interval, limit \\ nil) when is_integer(id) and interval in @statistics_intervals_keys do
+    {interval, default_limit} = Map.get(@statistics_intervals, interval)
+    limit = unless limit do
+      default_limit
+    else
+      limit
+    end
+    query = """
+    SELECT time_bucket('#{interval}', updated_at) as date,
+      last(users, updated_at) as users,
+      last(statuses, updated_at) as statuses,
+      last(peers, updated_at) as peers,
+      last(emojis, updated_at) as emojis
+    FROM instance_checks
+    WHERE instance_id = #{id}
+    GROUP BY date
+    ORDER BY date DESC
+    LIMIT #{limit}
+    """
+
     res = Ecto.Adapters.SQL.query!(Repo, query)
-    get_month = fn(map) -> map
-                          |> Map.get("month")
-                          |> elem(0)
-                          |> elem(1)
-                          end
+    get_date = fn(map) ->
+      {date, {h, m, s, ms}} = Map.get(map, "date")
+      hour = {h, m, s}
 
-    data = Enum.map(res.rows, fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
+      {date, hour}
+      |> NaiveDateTime.from_erl!(ms)
+      |> DateTime.from_naive!("Etc/UTC")
+    end
 
-    Enum.map(data, fn d -> Map.put(d, "month", get_month.(d)) end)
+    res.rows
+    |> Enum.map(fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
+    |> Enum.map(fn d -> Map.put(d, "date", get_date.(d)) end)
   end
-
-  def get_instance_statuses(id) do
-    query = "select distinct on (week) statuses, extract(week from updated_at) as week from instance_checks where instance_checks.instance_id = #{id} limit 52"
-    res = Ecto.Adapters.SQL.query!(Repo, query)
-    get_month = fn(map) -> map
-                          |> Map.get("week")
-                          end
-
-    data = Enum.map(res.rows, fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
-
-    Enum.map(data, fn d -> Map.put(d, "month", get_month.(d)) end)
-  end
-
 
   def switch_flag(id, flag, bool) when is_boolean(bool) do
     instance = get_instance!(id)

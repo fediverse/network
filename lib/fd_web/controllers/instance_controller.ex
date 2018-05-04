@@ -107,19 +107,25 @@ defmodule FdWeb.InstanceController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
+  def show(conn, params = %{"id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
-    iid           = instance.id
-    usm           = Instances.get_instance_users(iid)
-    users         = Enum.map(usm, fn r -> r["users"] end)
-    months        = Enum.map(usm, fn r -> r["updated_at"] |> elem(0) |> Date.from_erl! |> Date.to_iso8601 end)
+    iid = instance.id
+    interval      = Map.get(params, "interval", "daily")
+    stats         = Instances.get_instance_statistics(instance.id, interval)
+    get_serie = fn(stats, key) ->
+      Enum.map(stats, fn(stat) -> Map.get(stat, key, 0)||0 end)
+      |> Enum.reverse()
+    end
+    stats = %{
+      dates: get_serie.(stats, "date"),
+      users: get_serie.(stats, "users"),
+      statuses: get_serie.(stats, "statuses"),
+      peers: get_serie.(stats, "peers"),
+      emojis: get_serie.(stats, "emojis")
+    }
+
     checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])
     last_up_check = Instances.get_instance_last_up_check(instance)
-
-    s_w           = Instances.get_instance_statuses(iid)
-    weeks         = Enum.map(s_w, fn s -> trunc(s["week"]) end)
-    statuses      = Enum.map(s_w, fn s -> trunc(s["statuses"]) end)
-
 
     if Application.get_env(:fd, :instances)[:readrepair] do
       Fd.Instances.Server.crawl(instance.id)
@@ -128,8 +134,7 @@ defmodule FdWeb.InstanceController do
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} - #{Fd.ServerName.from_int(instance.server)}")
     |> assign(:private, instance.hidden)
-    |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats,
-                           users: users, months: months, weeks: weeks, statuses: statuses)
+    |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats, stats: stats)
   end
 
   def checks(conn, params) do
