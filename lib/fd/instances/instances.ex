@@ -73,7 +73,7 @@ defmodule Fd.Instances do
   end
 
   def get_instance_users(id) do
-    query = "select distinct on (month) id, users, statuses, date_trunc('month', updated_at) as month, updated_at from instance_checks where instance_id = #{id} limit 12"
+    query = "select distinct on (month) users, statuses, date_trunc('month', updated_at) as month, updated_at from instance_checks where instance_id = #{id} limit 12"
     res = Ecto.Adapters.SQL.query!(Repo, query)
     get_month = fn(map) -> map
                           |> Map.get("month")
