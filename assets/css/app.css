@@ -12,6 +12,9 @@
     display: inline-block;
 }
 
+.miniGraph {
+}
+
 @font-face {
   font-family: 'Work Sans';
   font-style: normal;

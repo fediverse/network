@@ -43,6 +43,8 @@ defmodule FdWeb.Router do
     get "/manage/login/:token", ManageController, :login_by_token, as: :manage
 
     resources "/", InstanceController, only: [:index, :show] do
+      get "/stats", InstanceController, :stats
+      get "/stats/:interval", InstanceController, :stats
       get "/emojis", InstanceController, :emojis
       get "/peers", InstanceController, :peers
       get "/checks", InstanceController, :checks

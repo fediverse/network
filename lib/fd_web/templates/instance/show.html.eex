@@ -6,22 +6,20 @@
   <% end %>
 </h2>
 
-<!-- Bootstrap CSS -->
-<!-- jQuery first, then Bootstrap JS. -->
-<!-- Nav tabs -->
-
-<ul class="nav nav-tabs" role="tablist">
+<!--<ul class="nav nav-tabs" role="tablist">
   <li class="nav-item">
-    <a class="nav-link active" href="#summary" role="tab" data-toggle="tab">summary</a>
+    <%= link "summary", to: instance_path(@conn, :show, @instance), class: "nav-link active" %>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="#graphs" role="tab" data-toggle="tab">graphs</a>
+    <%= link "stats", to: instance_instance_path(@conn, :stats, @instance), class: "nav-link" %>
   </li>
-</ul>
+  <li class="nav-item">
+    <%= link "checks", to: instance_instance_path(@conn, :checks, @instance), class: "nav-link" %>
+  </li>
+</ul>-->
 
-<!-- Tab panes -->
-<div class="tab-content">
-  <div role="tabpanel" class="tab-pane fade in active" id="summary">
+<div class="row">
+  <div class="col-md-3">
     <ul>
       <%= if @instance.dead do %>
         <li><strong class="text-danger">This instance is closed</strong>.
@@ -76,99 +74,20 @@
       <li>Found <%= @instance.inserted_at %></li>
     </ul>
   </div>
-<script>
-window.instanceStatistics = JSON.parse('<%= raw Poison.encode!(@stats) %>');
-window.instanceStatistics.dates = instanceStatistics.dates.map(function(date) { return moment(date).format("MMM") });
-window.instanceStatisticsInterval = "<%= raw @stats.interval %>";
-</script>
-
-  <div role="tabpanel" class="tab-pane fade" id="graphs">
-    <div class="chart">
-      <canvas id="statusesChart"></canvas>
-<script>
-      var ctx = document.getElementById("statusesChart").getContext('2d');
-      var myChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: window.instanceStatistics.dates,
-            datasets: [{
-              label: "N° of statuses",
-              fill: false,
-              borderColor: 'rgb(255, 99, 132)',
-              backgroundColor: 'rgb(255, 99, 132)',
-              data: window.instanceStatistics.statuses,
-              }],
-            options: {
-              scales: {
-                xAxes: [{
-                  type: 'time',
-                  distribution: 'series'
-                }]
-              }
-            }
-          }
-      });
-      </script>
+  <div class="col-md-9">
+    <%= if @instance.statuses do %>
+      <div class="miniGraph" data-controller="graph" data-rollover="Statuses" data-id="mini-statuses-graph" data-ts='<%= raw Poison.encode!(@stats.mg_statuses) %>'>
+        <div id="mini-statuses-graph"></div>
+      </div>
+    <% end %>
+    <%= if @instance.users do %>
+    <div class="miniGraph" data-controller="graph" data-rollover="Users" data-id="mini-users-graph" data-ts='<%= raw Poison.encode!(@stats.mg_users) %>'>
+      <div id="mini-users-graph"></div>
     </div>
+    <% end %>
 
-    <div class="chart">
-      <canvas id="userChart"></canvas>
-      <script>
-        var ctx = document.getElementById("userChart").getContext('2d');
-        var myChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: window.instanceStatistics.dates,
-            datasets: [{
-              label: "N° of users",
-              fill: false,
-              borderColor: 'rgb(255, 159, 64)',
-              backgroundColor: 'rgb(255, 159, 64)',
-              data: window.instanceStatistics.users,
-              }],
-            options: {
-              scales: {
-                xAxes: [{
-                  type: 'time',
-                  distribution: 'series'
-                }]
-              }
-            }
-          }
-      });
-      </script>
-    </div> <!-- chart -->
-    <div class="chart">
-      <canvas id="peersChart"></canvas>
-<script>
-      var ctx = document.getElementById("peersChart").getContext('2d');
-      var myChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: window.instanceStatistics.dates,
-            datasets: [{
-              label: "N° of peers",
-              fill: false,
-              borderColor: 'rgb(255, 99, 132)',
-              backgroundColor: 'rgb(255, 99, 132)',
-              data: window.instanceStatistics.peers,
-              }],
-            options: {
-              scales: {
-                xAxes: [{
-                  type: 'time',
-                  distribution: 'series'
-                }]
-              }
-            }
-          }
-      });
-      </script>
-    </div><!--chart -->
   </div>
 </div>
-
-
 
 <table class="table table-condensed">
   <thead>
