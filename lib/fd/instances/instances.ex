@@ -94,7 +94,7 @@ defmodule Fd.Instances do
       last(peers, updated_at) as peers,
       last(emojis, updated_at) as emojis
     FROM instance_checks
-    WHERE instance_id = #{id}
+    WHERE instance_id = #{id} AND up = 'true'
     GROUP BY date
     ORDER BY date DESC
     LIMIT #{limit}

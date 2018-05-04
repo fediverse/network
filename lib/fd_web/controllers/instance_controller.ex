@@ -121,7 +121,8 @@ defmodule FdWeb.InstanceController do
       users: get_serie.(stats, "users"),
       statuses: get_serie.(stats, "statuses"),
       peers: get_serie.(stats, "peers"),
-      emojis: get_serie.(stats, "emojis")
+      emojis: get_serie.(stats, "emojis"),
+      interval: interval,
     }
 
     checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])

@@ -76,23 +76,27 @@
       <li>Found <%= @instance.inserted_at %></li>
     </ul>
   </div>
+<script>
+window.instanceStatistics = JSON.parse('<%= raw Poison.encode!(@stats) %>');
+window.instanceStatistics.dates = instanceStatistics.dates.map(function(date) { return moment(date).format("MMM") });
+window.instanceStatisticsInterval = "<%= raw @stats.interval %>";
+</script>
 
   <div role="tabpanel" class="tab-pane fade" id="graphs">
     <div class="chart">
       <canvas id="statusesChart"></canvas>
 <script>
-    window.graphDates = <%= raw Poison.encode!(@stats.dates) %>.map(function(date) { return moment(date).format("MMM") });
       var ctx = document.getElementById("statusesChart").getContext('2d');
       var myChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: window.graphDates,
+            labels: window.instanceStatistics.dates,
             datasets: [{
               label: "N° of statuses",
               fill: false,
               borderColor: 'rgb(255, 99, 132)',
               backgroundColor: 'rgb(255, 99, 132)',
-              data: <%= raw inspect(@stats.statuses) %>,
+              data: window.instanceStatistics.statuses,
               }],
             options: {
               scales: {
@@ -114,13 +118,13 @@
         var myChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: window.graphDates,
+            labels: window.instanceStatistics.dates,
             datasets: [{
               label: "N° of users",
               fill: false,
               borderColor: 'rgb(255, 159, 64)',
               backgroundColor: 'rgb(255, 159, 64)',
-              data: <%= inspect(@stats.users)%>,
+              data: window.instanceStatistics.users,
               }],
             options: {
               scales: {
@@ -137,18 +141,17 @@
     <div class="chart">
       <canvas id="peersChart"></canvas>
 <script>
-    window.graphDates = <%= raw Poison.encode!(@stats.dates) %>.map(function(date) { return moment(date).format("MMM") });
       var ctx = document.getElementById("peersChart").getContext('2d');
       var myChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: window.graphDates,
+            labels: window.instanceStatistics.dates,
             datasets: [{
               label: "N° of peers",
               fill: false,
               borderColor: 'rgb(255, 99, 132)',
               backgroundColor: 'rgb(255, 99, 132)',
-              data: <%= raw inspect(@stats.peers) %>,
+              data: window.instanceStatistics.peers,
               }],
             options: {
               scales: {
