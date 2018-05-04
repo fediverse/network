@@ -24,7 +24,7 @@
   <li>
     <strong>Server:</strong>
     <%= link Fd.ServerName.from_int(@instance.server || 0), to: Fd.ServerName.route_path(@instance.server || 0) %>
-    <%= if @instance.server||0 == 0 do %>
+    <%= if (@instance.server||0) == 0 do %>
       <br />
       <i class="text-warning"><strong>Warning:</strong> Instances with an unknown server <strong>may for now not be real instances</strong>-- the
         crawler is still under development and may stumble upon non-instances. This will be fixed soon.</i>
