@@ -2,6 +2,8 @@
 
 The code that powers [fediverse.network](https://fediverse.network), maybe some day fediverse.directory too.
 
+Requires timescaledb.
+
 ## CLI Admin
 
     Fd.Instances.switch_flag(id, "dead", true)
