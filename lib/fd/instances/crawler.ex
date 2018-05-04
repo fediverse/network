@@ -28,7 +28,7 @@ defmodule Fd.Instances.Crawler do
   @hackney_opts [{:pool, @hackney_pool}]
   @hackney_mon_opts [{:pool, @hackney_pool}]
 
-  @down_http_codes [301, 410, 502, 503, 504, 526]
+  @down_http_codes [301, 410, 502, 503, 504, 505, 520, 521, 522, 523, 524, 525, 526, 527, 530]
   @nodeinfo_servers ["hubzilla", "Friendica"]
   @nodeinfo_hide_if_not_found_servers ["Friendica"]
 
