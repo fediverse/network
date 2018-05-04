@@ -3,6 +3,8 @@ defmodule Fd.Instances.InstanceCheck do
   import Ecto.Changeset
   alias __MODULE__
 
+  @primary_key false
+
   schema "instance_checks" do
     field :up, :boolean
     field :signup, :boolean
