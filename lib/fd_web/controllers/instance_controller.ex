@@ -86,6 +86,8 @@ defmodule FdWeb.InstanceController do
     |> Map.put_new("up", "true")
     |> Map.put_new("server", "known")
     instances = Enum.reduce(filters, from(i in Instance), &basic_filter_reduce/2)
+    |> select([q], %Instance{id: q.id, domain: q.domain, up: q.up, server: q.server, statuses: q.statuses, users: q.users,
+      peers: q.peers, emojis: q.emojis, hidden: q.hidden, signup: q.signup, dead: q.dead, version: q.version})
     |> Fd.Repo.all
 
     {instances, filters, Fd.GlobalStats.get()}
