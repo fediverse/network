@@ -33,6 +33,10 @@ defmodule Fd.Instances.Crawler do
   @nodeinfo_servers ["hubzilla", "Friendica"]
   @nodeinfo_hide_if_not_found_servers ["Friendica"]
 
+  def down_http_codes, do: @down_http_codes
+  def nodeinfo_servers, do: @nodeinfo_servers
+  def nodeinfo_hide_if_not_found_servers, do: @nodeinfo_hide_if_not_found
+
   defstruct [ :instance,
               :halted?,
               :fatal_error,
@@ -52,6 +56,7 @@ defmodule Fd.Instances.Crawler do
               :pt_stats,
 
               :has_nodeinfo?,
+              :nodeinfo_schema,
               :nodeinfo,
 
               :has_misskey?,
@@ -87,7 +92,7 @@ defmodule Fd.Instances.Crawler do
     |> query_peertube_config()
     |> query_peertube_stats()
     |> query_statusnet_config2()
-    |> query_nodeinfo()
+    |> Crawler.Nodeinfo.query()
     |> query_misskey_meta()
     |> query_misskey_stats()
     #|> query_html_index()
@@ -448,6 +453,31 @@ defmodule Fd.Instances.Crawler do
     %Crawler{crawler | changes: changes, check: check}
   end
 
+  def process_results(crawler = %{has_nodeinfo?: true}) do
+    users = get_in(crawler.nodeinfo, ["usage", "users", "total"])
+    posts = get_in(crawler.nodeinfo, ["usage", "localPosts"])
+    comments = get_in(crawler.nodeinfo, ["usage", "localComments"]) || 0
+    server = Fd.ServerName.to_int(get_in(crawler.nodeinfo, ["software", "name"])||0)
+    version = get_in(crawler.nodeinfo, ["software", "version"])
+    name = get_in(crawler.nodeinfo, ["metadata", "nodeName"])
+    statuses = posts + comments
+
+    check = crawler.check || %{}
+    |> Map.put("up", true)
+    |> Map.put_new("users", users)
+    |> Map.put_new("statuses", statuses)
+    |> Map.put_new("server", server)
+    |> Map.put_new("version", process_statusnet_version(version))
+
+    changes = crawler.changes || %{}
+    |> Map.put("name", name)
+    |> Map.put("last_up_at", DateTime.utc_now())
+    |> Map.put("dead", false)
+    |> Map.merge(check)
+
+    %Crawler{crawler | changes: changes, check: check}
+  end
+
   defp process_statusnet_version("Pleroma "<>version), do: {"Pleroma", version}
   defp process_statusnet_version("postactiv-"<>version), do: {"PostActiv", version}
   defp process_statusnet_version(version), do: {"GNUSocial", version}
@@ -693,34 +723,6 @@ defmodule Fd.Instances.Crawler do
   #
 
   @mastapi_not_found [404]
-  def query_nodeinfo(crawler = %Crawler{halted?: false, s_config: %{"site" => %{"platform" => %{"PLATFORM_NAME" => server}}}}) when server in @nodeinfo_servers, do: do_query_nodeinfo(crawler)
-  def query_nodeinfo(crawler = %Crawler{halted?: false, s_config: %{"site" => %{"friendica" => _}}}), do: do_query_nodeinfo(crawler)
-  def query_nodeinfo(crawler), do: crawler
-
-  def do_query_nodeinfo(crawler, version \\ nil) do
-    apiv = if version == nil, do: "2.0", else: version
-    case request(crawler, "/nodeinfo/"<>apiv) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        debug(crawler, "got /nodeinfo/#{inspect version} " <> inspect(body))
-        %Crawler{crawler | has_nodeinfo?: true, nodeinfo: body}
-      {:ok, %HTTPoison.Response{status_code: code}} when code in @mastapi_not_found ->
-        if version == nil do
-          do_query_nodeinfo(crawler, "1.0")
-        else
-          debug(crawler, "nodeinfo is not found. #{inspect code}")
-          %Crawler{crawler | has_nodeinfo?: false}
-        end
-      {:ok, %HTTPoison.Response{status_code: code}} when code not in @down_http_codes  ->
-        debug(crawler, "nodeinfo responded with an invalid code, maybe down or not found: #{inspect code}")
-        crawler
-      {:error, %Jason.DecodeError{}} ->
-        debug(crawler, "json decode error, skipping")
-        crawler
-      failed ->
-        debug(crawler, "host is down " <> inspect(failed))
-        %Crawler{crawler | halted?: true, fatal_error: failed}
-    end
-  end
 
   # -- Misskey /api/meta
   def query_misskey_meta(crawler = %Crawler{halted?: false, has_mastapi?: false, has_statusnet?: false, has_peertubeapi?: false, has_nodeinfo?: false}) do
@@ -763,7 +765,7 @@ defmodule Fd.Instances.Crawler do
         %Crawler{crawler | halted?: true, fatal_error: failed}
     end
   end
-  def query_statusnet_config(crawler), do: crawler
+  def query_misskey_stats(crawler), do: crawler
 
   #
   # -- HTML Index
@@ -782,7 +784,7 @@ defmodule Fd.Instances.Crawler do
 
   def query_html_index(crawler), do: crawler
 
-  defp request(crawler, path, options \\ []), do: request(crawler, path, options, 1)
+  def request(crawler, path, options \\ []), do: request(crawler, path, options, 1)
 
   @env Mix.env
   defp request(crawler = %Crawler{instance: %Instance{domain: domain}}, path, options, retries) do
@@ -853,15 +855,15 @@ defmodule Fd.Instances.Crawler do
   end
 
 
-  defp debug(crawler, message) do
+  def debug(crawler, message) do
     domain = crawler.instance.domain
     Logger.debug "Crawler(#{inspect self()} ##{crawler.instance.id} #{domain}): #{message}"
   end
-  defp info(crawler, message) do
+  def info(crawler, message) do
     domain = crawler.instance.domain
     Logger.info "Crawler(#{inspect self()} ##{crawler.instance.id} #{domain}): #{message}"
   end
-  defp error(crawler, message) do
+  def error(crawler, message) do
     domain = crawler.instance.domain
     Logger.error "Crawler(#{inspect self()} ##{crawler.instance.id} #{domain}): #{message}"
   end
