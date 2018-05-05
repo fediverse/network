@@ -5,6 +5,11 @@ defmodule FdWeb.InstanceView do
 
   import FdWeb.CommonView, only: [idna: 1]
 
+  def active_section_class(%{assigns: %{section: active_section}}, section) when active_section == section do
+    "active"
+  end
+  def active_section_class(_, _), do: ""
+
   def display_stat(stats, format, keys) do
     value = get_in(stats, keys)
     if value do

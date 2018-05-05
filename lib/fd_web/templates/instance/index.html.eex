@@ -35,7 +35,7 @@
 
 <%= server_info(@filters["server"]) %>
 
-<table class="table table-condensed">
+<table class="table table-condensed table-hover">
   <thead>
     <tr>
       <th></th>

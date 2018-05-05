@@ -21,22 +21,20 @@ export default class extends Controller {
       height: 130,
       target: "#"+targetId,
       x_accessor: 'date',
-      inflator: 1,
       y_accessor: 'value',
       xax_count: 4,
       yax_count: 2,
       left: 30,
       right: 0,
       top: 15,
-      min_y: first.value,
-      max_y: last.value + 10,
+      min_y_from_data: true,
       mouseover: function(d, i) {
         if (rollover) {
           var text = rollover + ": " + d.date + " " + d.value;
           d3.select("#"+targetId+ " svg .mg-active-datapoint").text(text)
         }
       },
-      missing_if_zero: false,
+      missing_if_zero: true,
       animate_on_load: true,
       y_extended_ticks: false
     })

@@ -1,0 +1,51 @@
+<%= render "_header.html", conn: @conn, instance: @instance %>
+
+<%= if @instance.statuses do %>
+<h3>Statuses</h3>
+<div class="row">
+  <div class="col-md-6">
+    <div class="miniGraph" data-controller="graph" data-rollover="Statuses" data-id="s-graph" data-ts='<%= raw Poison.encode!(@stats.mg_statuses) %>'>
+      <div id="s-graph"></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="miniGraph" data-controller="graph" data-rollover="New Statuses" data-id="ns-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_statuses) %>'>
+      <div id="ns-graph"></div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+<%= if @instance.users do %>
+<h3>Users</h3>
+<div class="row">
+  <div class="col-md-6">
+    <div class="miniGraph" data-controller="graph" data-rollover="Users" data-id="u-graph" data-ts='<%= raw Poison.encode!(@stats.mg_users) %>'>
+      <div id="u-graph"></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="miniGraph" data-controller="graph" data-rollover="New Users" data-id="nu-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_users) %>'>
+      <div id="nu-graph"></div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+<%= if @instance.peers do %>
+<h3>Peers</h3>
+<div class="row">
+  <div class="col-md-6">
+    <div class="miniGraph" data-controller="graph" data-rollover="Peers" data-id="p-graph" data-ts='<%= raw Poison.encode!(@stats.mg_peers) %>'>
+      <div id="p-graph"></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="miniGraph" data-controller="graph" data-rollover="New Peers" data-id="np-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_peers) %>'>
+      <div id="np-graph"></div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+

@@ -29,7 +29,7 @@ defmodule FdWeb.Router do
     get "/down", InstanceController, :index, as: :instance_down
     get "/newest", InstanceController, :index, as: :instance_newest
     get "/oldest", InstanceController, :index, as: :instance_oldest
-    get "/checks", InstanceController, :checks, as: :latest_checks
+    get "/checks", CheckController, :index, as: :latest_checks
     get "/tld", InstanceController, :tld, as: :instance
     get "/tld/:tld", InstanceController, :index, as: :instance_tld
     get "/domain", InstanceController, :domain, as: :instance

@@ -71,6 +71,64 @@ defmodule FdWeb.InstanceController do
     render(conn, "index.html", stats: stats, instances: instances, title: "Instances", filters: filters)
   end
 
+  def new(conn, _params) do
+    changeset = Instances.change_instance(%Instance{})
+    render(conn, "new.html", changeset: changeset)
+  end
+
+  def create(conn, %{"instance" => instance_params}) do
+    case Instances.create_instance(instance_params) do
+      {:ok, instance} ->
+        conn
+        |> put_flash(:info, "Instance added successfully.")
+        |> redirect(to: instance_path(conn, :show, instance))
+      {:error, %Ecto.Changeset{} = changeset} ->
+        render(conn, "new.html", changeset: changeset)
+    end
+  end
+
+  def show(conn, params = %{"id" => id}) do
+    instance      = Instances.get_instance_by_domain!(id)
+    iid           = instance.id
+    checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])
+    last_up_check = Instances.get_instance_last_up_check(instance)
+    host_stats    = Fd.HostStats.get()
+    stats         = get_instance_stats(instance, params)
+
+    if Application.get_env(:fd, :instances)[:readrepair] do
+      Fd.Instances.Server.crawl(instance.id)
+    end
+
+    conn
+    |> assign(:title, "#{Fd.Util.idna(instance.domain)} - #{Fd.ServerName.from_int(instance.server)}")
+    |> assign(:private, instance.hidden)
+    |> assign(:section, "summary")
+    |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats, stats: stats)
+  end
+
+  def stats(conn, params = %{"instance_id" => id}) do
+    instance      = Instances.get_instance_by_domain!(id)
+    stats         = get_instance_stats(instance, params)
+
+    conn
+    |> assign(:title, "#{Fd.Util.idna(instance.domain)} statistics")
+    |> assign(:section, "stats")
+    |> assign(:private, instance.hidden)
+    |> render("stats.html", instance: instance, stats: stats)
+  end
+
+  def checks(conn, params = %{"instance_id" => id}) do
+    instance      = Instances.get_instance_by_domain!(id)
+    iid           = instance.id
+    checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 500, order_by: [desc: c.updated_at])
+
+    conn
+    |> assign(:title, "#{Fd.Util.idna(instance.domain)} checks")
+    |> assign(:section, "checks")
+    |> assign(:private, instance.hidden)
+    |> render("checks.html", instance: instance, checks: checks)
+  end
+
   @allowed_filters ["up", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers"]
   defp basic_filter(params) do
     filters = params
@@ -93,26 +151,9 @@ defmodule FdWeb.InstanceController do
     {instances, filters, Fd.GlobalStats.get()}
   end
 
-  def new(conn, _params) do
-    changeset = Instances.change_instance(%Instance{})
-    render(conn, "new.html", changeset: changeset)
-  end
-
-  def create(conn, %{"instance" => instance_params}) do
-    case Instances.create_instance(instance_params) do
-      {:ok, instance} ->
-        conn
-        |> put_flash(:info, "Instance added successfully.")
-        |> redirect(to: instance_path(conn, :show, instance))
-      {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "new.html", changeset: changeset)
-    end
-  end
-
-  def show(conn, params = %{"id" => id}) do
-    instance      = Instances.get_instance_by_domain!(id)
-    iid = instance.id
-    interval      = Map.get(params, "interval", "daily")
+  defp get_instance_stats(instance, params) do
+    default_interval = if instance.monitor, do: "hourly", else: "3hour"
+    interval      = Map.get(params, "interval", default_interval)
     stats         = Instances.get_instance_statistics(instance.id, interval)
     get_serie = fn(stats, key) ->
       Enum.map(stats, fn(stat) -> Map.get(stat, key, 0)||0 end)
@@ -127,42 +168,22 @@ defmodule FdWeb.InstanceController do
       end)
       |> Enum.reverse
     end
-    stats = %{
+    %{
       dates: get_serie.(stats, "date"),
       users: get_serie.(stats, "users"),
       statuses: get_serie.(stats, "statuses"),
       peers: get_serie.(stats, "peers"),
       emojis: get_serie.(stats, "emojis"),
       mg_users: get_mg_serie.(stats, "users"),
+      mg_new_users: get_mg_serie.(stats, "new_users"),
       mg_statuses: get_mg_serie.(stats, "statuses"),
+      mg_new_statuses: get_mg_serie.(stats, "new_statuses"),
       mg_peers: get_mg_serie.(stats, "peers"),
+      mg_new_peers: get_mg_serie.(stats, "new_peers"),
       mg_emojis: get_mg_serie.(stats, "emojis"),
+      mg_new_emojis: get_mg_serie.(stats, "new_emojis"),
       interval: interval,
     }
-
-    checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])
-    last_up_check = Instances.get_instance_last_up_check(instance)
-
-    if Application.get_env(:fd, :instances)[:readrepair] do
-      Fd.Instances.Server.crawl(instance.id)
-    end
-    host_stats = Fd.HostStats.get()
-    conn
-    |> assign(:title, "#{Fd.Util.idna(instance.domain)} - #{Fd.ServerName.from_int(instance.server)}")
-    |> assign(:private, instance.hidden)
-    |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats, stats: stats)
-  end
-
-  def checks(conn, params) do
-    checks = from(c in InstanceCheck, limit: 250, order_by: [desc: c.updated_at])
-    checks = Enum.reduce(params, checks, &check_filter_reduce/2)
-
-    checks = checks
-    |> Fd.Repo.all
-    |> Fd.Repo.preload(:instance)
-    conn
-    |> assign(:title, "Checks")
-    |> render("checks.html", checks: checks)
   end
 
   defp basic_filter_reduce({"up", "true"}, query) do
@@ -234,8 +255,6 @@ defmodule FdWeb.InstanceController do
     |> order_by([i], [desc: i.peers])
   end
 
-
-
   defp basic_filter_reduce({"tld", tld}, query) do
     tld = Fd.Util.from_idna(tld)
     where(query, [i], i.domain_suffix == ^tld)
@@ -247,9 +266,5 @@ defmodule FdWeb.InstanceController do
 
   defp basic_filter_reduce(_, query), do: query
 
-  defp check_filter_reduce({"error", error}, query) do
-    where(query, [c], c.error_s == ^error)
-  end
-  defp check_filter_reduce(_, query), do: query
 
 end

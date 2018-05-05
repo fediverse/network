@@ -74,6 +74,8 @@ defmodule Fd.Instances do
 
   @statistics_intervals %{
     "5min" => {"5 minutes", 576}, # two days
+    "hourly" => {"1 hour", 192}, #one week
+    "3hour" => {"3 hour", 112}, #two weeks
     "daily" => {"1 day", 31},
     "weekly" => {"1 week", 53},
     "monthly" => {"1 month", 12},

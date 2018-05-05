@@ -1,22 +1,4 @@
-<h2><%= name(@instance) %>
-  <%= if @instance.dead do %>
-    <span class="label label-danger">CLOSED</span>
-  <% else %>
-    <%= unless @instance.up do %><span class="label label-warning">DOWN</span><% end %>
-  <% end %>
-</h2>
-
-<!--<ul class="nav nav-tabs" role="tablist">
-  <li class="nav-item">
-    <%= link "summary", to: instance_path(@conn, :show, @instance), class: "nav-link active" %>
-  </li>
-  <li class="nav-item">
-    <%= link "stats", to: instance_instance_path(@conn, :stats, @instance), class: "nav-link" %>
-  </li>
-  <li class="nav-item">
-    <%= link "checks", to: instance_instance_path(@conn, :checks, @instance), class: "nav-link" %>
-  </li>
-</ul>-->
+<%= render "_header.html", conn: @conn, instance: @instance %>
 
 <div class="row">
   <div class="col-md-3">
@@ -76,12 +58,12 @@
   </div>
   <div class="col-md-9">
     <%= if @instance.statuses do %>
-      <div class="miniGraph" data-controller="graph" data-rollover="Statuses" data-id="mini-statuses-graph" data-ts='<%= raw Poison.encode!(@stats.mg_statuses) %>'>
+      <div class="miniGraph" data-controller="graph" data-rollover="New Statuses" data-id="mini-statuses-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_statuses) %>'>
         <div id="mini-statuses-graph"></div>
       </div>
     <% end %>
     <%= if @instance.users do %>
-    <div class="miniGraph" data-controller="graph" data-rollover="Users" data-id="mini-users-graph" data-ts='<%= raw Poison.encode!(@stats.mg_users) %>'>
+    <div class="miniGraph" data-controller="graph" data-rollover="New Users" data-id="mini-users-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_users) %>'>
       <div id="mini-users-graph"></div>
     </div>
     <% end %>
@@ -93,12 +75,12 @@
   <thead>
     <tr>
       <th>status</th>
-      <th>signup</th>
       <th>users</th>
       <th>statuses</th>
       <th>peers</th>
       <th>emojis</th>
       <th>version</th>
+      <th>signup</th>
       <th>at</th>
     </tr>
   </thead>
@@ -109,12 +91,12 @@
         <%= if check.error_s do %>
           <td><%= check.error_s %></td>
         <% else %>
-          <td><%= check.signup %></td>
           <td><%= check.users %></td>
           <td><%= check.statuses %></td>
           <td><%= check.peers %></td>
           <td><%= check.emojis %></td>
           <td><%= check.version %></td>
+          <td><%= check.signup %></td>
         <% end %>
         <td><%= check.updated_at %></td>
       </tr>
