@@ -42,12 +42,14 @@ defmodule Fd.Application do
     :timer.sleep(500)
     mon_instance_ids = from(i in Instance, select: i.id, where: i.monitor == true, order_by: [asc: i.last_checked_at])
     |> Repo.all
-    instance_ids = from(i in Instance, select: i.id, where: is_nil(i.monitor) or i.monitor == false, order_by: [asc: i.last_checked_at])
+    instance_ids = from(i in Instance, select: i.id, where: (i.server != 0) and (is_nil(i.monitor) or i.monitor == false), order_by: [asc: i.last_checked_at])
     |> Repo.all
-    for instance_id <- mon_instance_ids ++ instance_ids do
+    unknown_instance_ids = from(i in Instance, select: i.id, where: ((is_nil(i.server) or i.server == 0)) and (is_nil(i.monitor) or i.monitor == false), order_by: [asc: i.last_checked_at])
+    |> Repo.all
+    for instance_id <- mon_instance_ids ++ instance_ids ++ unknown_instance_ids do
       IO.puts "-- starting instance #{instance_id}"
       Fd.Instances.ServerSupervisor.start_child(instance_id)
-      :timer.sleep(:crypto.rand_uniform(50, 350))
+      :timer.sleep(:crypto.rand_uniform(2000, 15000))
     end
   end
 

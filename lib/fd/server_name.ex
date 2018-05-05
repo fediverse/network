@@ -10,8 +10,9 @@ defmodule Fd.ServerName do
     6   => "PostActiv",
     7   => "Friendica",
     8   => "Kroeg", # https://github.com/puckipedia/Kroeg
-    9   => "GangGo", # not AP yet but soon https://github.com/ganggo/ganggo/pull/55
-    10  => "SocialHome", # not AP yet but soon too
+    9   => "Misskey",
+    10   => "GangGo", # not AP yet but soon https://github.com/ganggo/ganggo/pull/55
+    11  => "SocialHome", # not AP yet but soon too
   }
   @server_data %{
     0 => %{
@@ -68,11 +69,14 @@ defmodule Fd.ServerName do
       source: "https://github.com/puckipedia/Kroeg",
     },
     9 => %{
+      source: "https://github.com/syuilo/misskey",
+    },
+    10 => %{
       hidden: true,
       notice: "Not compatible ActivityPub yet",
       source: "https://github.com/ganggo/ganggo"
     },
-    10 => %{
+    11 => %{
       hidden: true,
       notice: "Not compatible ActivityPub yet",
       source: "https://github.com/jaywink/socialhome",

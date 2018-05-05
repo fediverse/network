@@ -54,6 +54,10 @@ defmodule Fd.Instances.Crawler do
               :has_nodeinfo?,
               :nodeinfo,
 
+              :has_misskey?,
+              :misskey_meta,
+              :misskey_stats,
+
               :html,
 
               :changes,
@@ -68,7 +72,7 @@ defmodule Fd.Instances.Crawler do
 
   def run(instance = %Instance{domain: domain}) do
     state = %Crawler{instance: instance, halted?: false, has_mastapi?: false, has_statusnet?: false, has_peertubeapi?:
-      false, has_nodeinfo?: false, changes: %{}, check: %{}}
+      false, has_nodeinfo?: false, has_misskey?: false, changes: %{}, check: %{}}
 
 
     start = :erlang.monotonic_time
@@ -84,6 +88,8 @@ defmodule Fd.Instances.Crawler do
     |> query_peertube_stats()
     |> query_statusnet_config2()
     |> query_nodeinfo()
+    |> query_misskey_meta()
+    |> query_misskey_stats()
     #|> query_html_index()
     |> process_results()
     |> put_public_suffix()
@@ -428,6 +434,20 @@ defmodule Fd.Instances.Crawler do
     %Crawler{crawler | changes: changes, check: check}
   end
 
+  def process_results(crawler = %{has_misskey?: true}) do
+    users = Map.get(crawler.misskey_stats || %{}, "usersCount")
+    statuses = Map.get(crawler.misskey_stats || %{}, "notesCount")
+    version = Map.get(crawler.misskey_meta || %{}, "version")
+    server = Fd.ServerName.to_int("misskey")
+
+    check = %{"up" => true, "users" => users, "statuses" => statuses, "version" => version, "server" => server}
+    changes = %{"last_up_at" => DateTime.utc_now()}
+    |> Map.merge(check)
+    |> Map.put("dead", false)
+
+    %Crawler{crawler | changes: changes, check: check}
+  end
+
   defp process_statusnet_version("Pleroma "<>version), do: {"Pleroma", version}
   defp process_statusnet_version("postactiv-"<>version), do: {"PostActiv", version}
   defp process_statusnet_version(version), do: {"GNUSocial", version}
@@ -485,6 +505,9 @@ defmodule Fd.Instances.Crawler do
         %Crawler{crawler | has_mastapi?: false}
       {:ok, %HTTPoison.Response{status_code: code}} when code not in @down_http_codes ->
         debug(crawler, "mastapi responded with an invalid code, maybe down or not found: #{inspect code}")
+        %Crawler{crawler | has_mastapi?: false}
+      {:error, %Jason.DecodeError{}} ->
+        debug(crawler, "json decode error, skipping")
         %Crawler{crawler | has_mastapi?: false}
       failed ->
         debug(crawler, "host is down " <> inspect(failed))
@@ -553,6 +576,9 @@ defmodule Fd.Instances.Crawler do
         %Crawler{crawler | has_peertubeapi?: false}
       {:ok, %HTTPoison.Response{status_code: code}}  when code not in @down_http_codes ->
         debug(crawler, "peertubeapi responded with an invalid code, maybe down or not found: #{inspect code}")
+        %Crawler{crawler | has_peertubeapi?: false}
+      {:error, %Jason.DecodeError{}} ->
+        debug(crawler, "json decode error, skipping")
         %Crawler{crawler | has_peertubeapi?: false}
       failed ->
         debug(crawler, "host is down " <> inspect(failed))
@@ -696,6 +722,49 @@ defmodule Fd.Instances.Crawler do
     end
   end
 
+  # -- Misskey /api/meta
+  def query_misskey_meta(crawler = %Crawler{halted?: false, has_mastapi?: false, has_statusnet?: false, has_peertubeapi?: false, has_nodeinfo?: false}) do
+    case request(crawler, "/api/meta", [method: :post]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        debug(crawler, "got /api/meta " <> inspect(body))
+        %Crawler{crawler | has_misskey?: true, misskey_meta: body}
+      {:ok, %HTTPoison.Response{status_code: code}} when code in @mastapi_not_found ->
+        debug(crawler, "misskey is not found. #{inspect code}")
+        %Crawler{crawler | has_misskey?: false}
+      {:ok, %HTTPoison.Response{status_code: code}} when code not in @down_http_codes  ->
+        debug(crawler, "misskey responded with an invalid code, maybe down or not found: #{inspect code}")
+        crawler
+      {:error, %Jason.DecodeError{}} ->
+        debug(crawler, "json decode error, skipping")
+        %Crawler{crawler | has_misskey?: false}
+      failed ->
+        debug(crawler, "host is down (meta misskey) " <> inspect(failed))
+        %Crawler{crawler | halted?: true, fatal_error: failed}
+    end
+  end
+  def query_misskey_meta(crawler), do: crawler
+
+  def query_misskey_stats(crawler = %Crawler{halted?: false, has_misskey?: true}) do
+    case request(crawler, "/api/stats", [method: :post]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        debug(crawler, "got /api/stats " <> inspect(body))
+        %Crawler{crawler | misskey_stats: body}
+      {:ok, %HTTPoison.Response{status_code: code}} when code in @mastapi_not_found ->
+        debug(crawler, "misskey stats is not found. #{inspect code}")
+        crawler
+      {:ok, %HTTPoison.Response{status_code: code}} when code not in @down_http_codes  ->
+        debug(crawler, "misskey stats responded with an invalid code, maybe down or not found: #{inspect code}")
+        crawler
+      {:error, %Jason.DecodeError{}} ->
+        debug(crawler, "json decode error, skipping")
+        crawler
+      failed ->
+        debug(crawler, "host is down " <> inspect(failed))
+        %Crawler{crawler | halted?: true, fatal_error: failed}
+    end
+  end
+  def query_statusnet_config(crawler), do: crawler
+
   #
   # -- HTML Index
   # -> Detect GNU Social (last resort)
@@ -719,6 +788,8 @@ defmodule Fd.Instances.Crawler do
   defp request(crawler = %Crawler{instance: %Instance{domain: domain}}, path, options, retries) do
     follow_redirects = Keyword.get(options, :follow_redirects, false)
     json = Keyword.get(options, :json, true)
+    method = Keyword.get(options, :method, :get)
+    body = Keyword.get(options, :body, "")
     {mon_ua, options} = if crawler.instance.monitor do
       mon_ua = " - monitoring enabled https://fediverse.network/monitoring"
       {mon_ua, @hackney_mon_opts}
@@ -735,9 +806,9 @@ defmodule Fd.Instances.Crawler do
     else
       headers
     end
-    case HTTPoison.get("https://#{domain}#{path}", headers, options) do
+    case HTTPoison.request(method, "https://#{domain}#{path}", body, headers, options) do
       {:ok, response = %HTTPoison.Response{status_code: 200, body: body}} ->
-        info(crawler, "http ok")
+        info(crawler, "http ok - #{inspect method} - #{inspect path}")
         debug(crawler, "http body: " <>inspect(body))
         case json && Jason.decode(body) do
           {:ok, body} ->
