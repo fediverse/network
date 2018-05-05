@@ -129,7 +129,7 @@ defmodule FdWeb.InstanceController do
     |> render("checks.html", instance: instance, checks: checks)
   end
 
-  @allowed_filters ["up", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers"]
+  @allowed_filters ["up", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers", "max_chars"]
   defp basic_filter(params) do
     filters = params
     |> Enum.map(fn({param, value}) ->
@@ -145,7 +145,8 @@ defmodule FdWeb.InstanceController do
     |> Map.put_new("server", "known")
     instances = Enum.reduce(filters, from(i in Instance), &basic_filter_reduce/2)
     |> select([q], %Instance{id: q.id, domain: q.domain, up: q.up, server: q.server, statuses: q.statuses, users: q.users,
-      peers: q.peers, emojis: q.emojis, hidden: q.hidden, signup: q.signup, dead: q.dead, version: q.version})
+      peers: q.peers, emojis: q.emojis, hidden: q.hidden, signup: q.signup, dead: q.dead, version: q.version,
+      inserted_at: q.inserted_at, max_chars: q.max_chars})
     |> Fd.Repo.all
 
     {instances, filters, Fd.GlobalStats.get()}
@@ -231,6 +232,17 @@ defmodule FdWeb.InstanceController do
     query
     |> where([i], not is_nil(i.statuses))
     |> order_by([i], [desc: i.statuses])
+  end
+
+  defp basic_filter_reduce({"max_chars", "asc"}, query) do
+    query
+    |> where([i], not is_nil(i.max_chars))
+    |> order_by([i], [asc: i.max_chars])
+  end
+  defp basic_filter_reduce({"max_chars", "desc"}, query) do
+    query
+    |> where([i], not is_nil(i.max_chars))
+    |> order_by([i], [desc: i.max_chars])
   end
 
   defp basic_filter_reduce({"emojis", "asc"}, query) do

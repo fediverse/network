@@ -51,6 +51,9 @@
       <%= if @filters["age"] do %>
         <th>Age</th>
       <% end %>
+      <%= if @filters["max_chars"] do %>
+        <th>Max Chars</th>
+      <% end %>
 
     </tr>
   </thead>
@@ -76,6 +79,9 @@
       <% end %>
       <%= if @filters["age"] do %>
         <td><%= instance.inserted_at %></td>
+      <% end %>
+      <%= if @filters["max_chars"] do %>
+        <td><%= instance.max_chars %></td>
       <% end %>
     </tr>
   <% end %>
