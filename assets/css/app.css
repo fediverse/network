@@ -69,3 +69,35 @@ p.server-info {
   border-left: 2px solid grey;
 }
 
+ul.filters {
+  margin-left: 0;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style-type: none;
+}
+ul.filters > li.filter {
+}
+ul.filters > li.filter strong::after {
+  content: ":";
+  font-weight: normal;
+}
+ul.filters > li.filter > ul.list {
+  display: inline;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  margin-left: 1em;
+}
+ul.filters > li.filter > ul.list > li {
+  display: inline;
+  color: grey;
+  margin-left: 0;
+  margin-right: 0;
+}
+ul.filters > li.filter > ul.list > li:not(:last-child):after {
+  content: "|";
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+  color: grey;
+}
+

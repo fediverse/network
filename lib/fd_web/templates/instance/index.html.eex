@@ -1,41 +1,37 @@
 <h2><%= @title %></h2>
 
-<p>
-<strong>Status</strong>:
-<%= link "Up", to: instance_path(@conn, :index), class: active_class_bool(@filters["up"]) %>
-&nbsp;<%= display_stat(@stats,:mini, ["instances", "up"]) %> | 
-<%= link "Down", to: instance_down_path(@conn, :index), class: active_class_bool(@filters["up"] == false) %> 
-&nbsp;<%= display_stat(@stats,:mini, ["instances", "down"]) %> | 
-<%= link "Newest", to: instance_newest_path(@conn, :index), class: active_class_bool(@filters["age"] == "newest") %> |
-<%= link "All", to: instance_all_path(@conn, :index), class: active_class_bool(@filters["up"] == nil) %>
-<br />
-<strong>Servers</strong>:
-<%= link "All", to: instance_path(@conn, :index), class: active_class_bool(@filters["server"] == nil) %> | 
-<%= link "Mastodon", to: instance_server_path(@conn, :index, "mastodon"), class: active_class_bool(@filters["server"]== "mastodon") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 2, "instances", "up"]) %> | 
-<%= link "Pleroma", to: instance_server_path(@conn, :index, "pleroma"), class: active_class_bool(@filters["server"] =="pleroma") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 3, "instances", "up"]) %> | 
-<%= link "GNU Social", to: instance_server_path(@conn, :index, "gnusocial"), class: active_class_bool(@filters["server"]== "gnusocial") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 1, "instances", "up"]) %> | 
-<%= link "Hubzilla", to: instance_server_path(@conn, :index, "hubzilla"), class: active_class_bool(@filters["server"]=="hubzilla") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 5, "instances", "up"]) %> | 
-<%= link "Friendica", to: instance_server_path(@conn, :index, "friendica"), class: active_class_bool(@filters["server"]== "friendica") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 7, "instances", "up"]) %> | 
-<%= link "PostActiv", to: instance_server_path(@conn, :index, "postactiv"), class: active_class_bool(@filters["server"]== "postactiv") %>
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 6, "instances", "up"]) %> | 
-<%= link "PeerTube", to: instance_server_path(@conn, :index, "peertube"), class: active_class_bool(@filters["server"] == "peertube") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 4, "instances", "up"]) %> | 
-<%= link "Kroeg", to: instance_server_path(@conn, :index, "kroeg"), class: active_class_bool(@filters["server"] =="kroeg") %> 
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 8, "instances", "up"]) %> | 
-<%= link "Other", to: instance_server_path(@conn, :index, "unknown"), class: active_class_bool(@filters["server"] == "unknown") %>
-&nbsp;<%= display_stat(@stats,:mini, ["per_server", 0, "instances", "up"]) %> 
-<br />
+<ul class="filters">
+  <li class="filter">
+    <strong>Status</strong>
+    <ul class="list">
+      <li><%= link "Up", to: instance_path(@conn, :index), class: active_class_bool(@filters["up"]=="true") %> 
+        <%= display_stat(@stats,:mini, ["instances", "up"]) %></li>
+      <li><%= link "Down", to: instance_down_path(@conn, :index), class: active_class_bool(@filters["up"] == "false") %> 
+        <%= display_stat(@stats,:mini, ["instances", "down"]) %></li>
+      <li><%= link "Newest", to: instance_newest_path(@conn, :index), class: active_class_bool(@filters["age"] == "newest") %></li>
+      <li><%= link "All", to: instance_all_path(@conn, :index), class: active_class_bool(@filters["up"] == "all" or @filters["up"]==nil) %>
+        <%= display_stat(@stats,:mini, ["instances", "total"]) %></li>
+    </ul>
+  <li class="filter">
+    <strong>Servers</strong>
+    <ul class="list">
+      <li><%= link "All", to: instance_path(@conn, :index), class: active_class_bool(@filters["server"] == "all" or @filters["server"] == "known") %></li>
+      <%= for server = %{hidden: false} <- Fd.ServerName.list() do %>
+        <li><%= link server.name, to: instance_server_path(@conn, :index, server.path), class: active_class_bool(@filters["server"]==server.path) %> 
+          <%= display_stats(@stats,:mini, ["per_server", server.id, "instances"], ["up", "total"]) %></li>
+      <% end %>
+    </ul>
+  </li>
+</ul>
+
+<p class="list-stats">
 <%= if @filters["server"] && @filters["server"]!="known" do %>
   Users: <%= display_stat(@stats, :inline, ["per_server", Fd.ServerName.to_int(@filters["server"]), "users", "up"]) %>
   &nbsp;- Statuses: <%= display_stat(@stats, :inline, ["per_server", Fd.ServerName.to_int(@filters["server"]), "statuses", "up"]) %>
 <% else %>
   Users: <%= display_stat(@stats, :inline, ["users", "up"]) %> - Statuses: <%= display_stat(@stats, :inline, ["statuses", "up"]) %>
 <% end %>
+</p>
 
 <%= server_info(@filters["server"]) %>
 

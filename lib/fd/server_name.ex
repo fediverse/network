@@ -1,6 +1,6 @@
 defmodule Fd.ServerName do
 
-  @default "Unknown"
+  @default "Other"
   @servers %{
     1   => "GNUSocial",
     2   => "Mastodon",
@@ -20,6 +20,7 @@ defmodule Fd.ServerName do
     1 => %{
       link: "https://gnu.io/social/",
       source: "https://git.gnu.io/gnu/gnu-social/",
+      notice: "Statistics are not available",
     },
     2 => %{
       link: "https://joinmastodon.org",
@@ -50,14 +51,17 @@ defmodule Fd.ServerName do
     5 => %{
       link: "https://hubzilla.org",
       source: "https://github.com/redmatrix/hubzilla",
+      notice: "Statistics are not available for private instances",
     },
     6 => %{
       link: "https://www.postactiv.com",
       source: "http://gitea.postactiv.com/postActiv/postActiv",
+      notice: "Statistics are not available",
     },
     7 => %{
       link: "https://friendi.ca/",
       source: "https://github.com/friendica/friendica",
+      notice: "Statistics are not available for private instances",
     },
     8 => %{
       description: "Experimental ActivityPub server in C#",
@@ -82,6 +86,7 @@ defmodule Fd.ServerName do
     |> String.replace(" ", "")
     data = Map.get(@server_data, id, nil)
     |> Macro.escape
+    def to_path(unquote(id)), do: unquote(path)
     def from_int(unquote(id)), do: unquote(name)
     def to_int("/"<>unquote(path)), do: unquote(id)
     def to_int(unquote(name)), do: unquote(id)
@@ -98,8 +103,24 @@ defmodule Fd.ServerName do
   def data(0), do: Map.get(@server_data, 0, nil)
   def data(_), do: nil
 
+  def to_path(0), do: String.downcase(@default)
+
   def list_names do
     Enum.map(@servers, fn({_, name}) -> name end) ++ [@default]
+  end
+
+  def list do
+    stats = Fd.GlobalStats.get()
+    @servers
+    |> Map.put(0, @default)
+    |> Enum.map(fn({id, name}) ->
+      data(id)
+      |> Map.put(:id, id)
+      |> Map.put(:name, name)
+      |> Map.put(:path, to_path(id))
+      |> Map.put_new(:hidden, false)
+    end)
+    |> Enum.sort_by(fn(%{id: id}) -> get_in(stats, ["per_server", id, "instances", "total"])||0 end, &>=/2)
   end
 
   def route_path(id) when is_integer(id) do

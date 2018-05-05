@@ -11,6 +11,24 @@ defmodule FdWeb.InstanceView do
       format_stat(format, keys, value)
     end
   end
+  def display_stats(stats, format, key, keys) do
+    value = get_in(stats, key)
+    if value do
+      stats = for skey <- keys do
+        if val = Map.get(value, skey) do
+          format_stat(:inline, [key, skey], val)
+        end
+      end
+      |> Enum.filter(fn(x) -> x end)
+      |> Enum.intersperse(" - ")
+      if format == :mini do
+        ["(", stats, ")"]
+      else
+        stats
+      end
+    end
+  end
+
 
   def format_stat(:mini, keys, value) do
     content_tag(:span, ["(", to_string(value), ")"], title: Enum.join(keys, " "), class: "stat-"<>Enum.join(keys, "-"))
@@ -48,6 +66,7 @@ defmodule FdWeb.InstanceView do
   def clean_name(name, domain) when name == domain, do: nil
   def clean_name(name, _), do: name
 
+  def server_info("known"), do: nil
   def server_info(name) when is_binary(name) do
     server_info(Fd.ServerName.to_int(name))
   end
