@@ -1,0 +1,16 @@
+<p class="server-info">
+  <%= if notice = Map.get(@data, :notice) do %>
+    <span class="text-warning"><%= notice %><br /><br />
+  <% end %>
+  <%= if description = Map.get(@data, :description) do %>
+  <%= description %><br /><br />
+  <% end %>
+  <%= if link = Map.get(@data, :link), do: [content_tag(:strong, link("Website", to: link)), raw("&nbsp;")] %>
+  <%= if link = Map.get(@data, :source), do: [content_tag(:strong, link("Source code", to: link)), raw("&nbsp;")] %>
+  <%= if other_stats = Map.get(@data, :other_stats) do %>
+    <br />
+    Other statistics and lists:
+    <%= Enum.intersperse(for({title, link} <- other_stats, do: link(title, to: link)), ", ") %>
+  <% end %>
+</p>
+

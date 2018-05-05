@@ -61,3 +61,11 @@ thead, th {
   top: 0;
   background: #fff;
 }
+
+p.server-info {
+  margin-top: 2rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid grey;
+}
+

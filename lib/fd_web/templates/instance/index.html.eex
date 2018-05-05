@@ -37,6 +37,8 @@
   Users: <%= display_stat(@stats, :inline, ["users", "up"]) %> - Statuses: <%= display_stat(@stats, :inline, ["statuses", "up"]) %>
 <% end %>
 
+<%= server_info(@filters["server"]) %>
+
 <table class="table table-condensed">
   <thead>
     <tr>

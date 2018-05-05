@@ -48,5 +48,16 @@ defmodule FdWeb.InstanceView do
   def clean_name(name, domain) when name == domain, do: nil
   def clean_name(name, _), do: name
 
+  def server_info(name) when is_binary(name) do
+    server_info(Fd.ServerName.to_int(name))
+  end
+  def server_info(id) when is_integer(id) do
+    case Fd.ServerName.data(id) do
+      data when is_map(data) ->
+        render("_server_info.html", data: data)
+      _ -> nil
+    end
+  end
+  def server_info(_), do: nil
 
 end

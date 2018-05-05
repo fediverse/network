@@ -92,7 +92,11 @@ defmodule Fd.Instances do
       last(users, updated_at) as users,
       last(statuses, updated_at) as statuses,
       last(peers, updated_at) as peers,
-      last(emojis, updated_at) as emojis
+      last(emojis, updated_at) as emojis,
+      (last(users, updated_at) - first(users, updated_at)) as new_users,
+      (last(statuses, updated_at) - first(statuses, updated_at)) as new_statuses,
+      (last(peers, updated_at) - first(peers, updated_at)) as new_peers,
+      (last(emojis, updated_at) - first(emojis, updated_at)) as new_emojis
     FROM instance_checks
     WHERE instance_id = #{id} AND up = 'true'
     GROUP BY date
