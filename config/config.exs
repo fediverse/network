@@ -24,7 +24,7 @@ config :logger, :console,
 
 config :fd, :instances,
   autostart: false,
-  readrepair: true
+  readrepair: false
 
 config :fd, :delays,
   instance_default: {:rand, 45, 85},
