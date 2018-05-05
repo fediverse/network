@@ -29,6 +29,7 @@ defmodule Fd.Instances.Crawler do
   @hackney_mon_opts [{:pool, @hackney_pool}]
 
   @down_http_codes [301, 410, 502, 503, 504, 505, 520, 521, 522, 523, 524, 525, 526, 527, 530]
+  @retry_http_codes [500, 502, 503, 504, 505, 520, 521, 522, 523, 524]
   @nodeinfo_servers ["hubzilla", "Friendica"]
   @nodeinfo_hide_if_not_found_servers ["Friendica"]
 
@@ -748,23 +749,38 @@ defmodule Fd.Instances.Crawler do
             {:error, error}
           false -> {:ok, response}
         end
+      {:ok, response = %HTTPoison.Response{status_code: code}} when code in @retry_http_codes ->
+        retry(crawler, path, options, {:ok, response}, retries)
       {:ok, response} ->
         info(crawler, "http ok")
         {:ok, response}
-      {:error, error = %HTTPoison.Error{reason: reason}} when reason in [:timeout, :connect_timeout, :closed] ->
-        if retries >= 5 do
-          error(crawler, "HTTP TIMEOUT: (#{inspect reason} - max retries reached)")
-          {:error, error}
-        else
-          error(crawler, "HTTP TIMEOUT: (#{inspect reason} - retry #{inspect retries})" <> inspect(error))
-          :timer.sleep(:crypto.rand_uniform(500, 5000))
-          request(crawler, path, options, retries + 1)
-        end
+      {:error, error = %HTTPoison.Error{reason: reason}} when reason in [:timeout, :connect_timeout, :closed, :nxdomain] ->
+        retry(crawler, path, options, {:error, error}, retries)
+        #if retries > 4  do
+        #  error(crawler, "HTTP TIMEOUT: (#{inspect reason} - max retries reached)")
+        #  {:error, error}
+        #else
+        #  error(crawler, "HTTP TIMEOUT: (#{inspect reason} - retry #{inspect retries})" <> inspect(error))
+        #  :timer.sleep(:crypto.rand_uniform(retries*1000, retries*2000))
+        #  request(crawler, path, options, retries + 1)
+        #end
       {:error, error} ->
         error(crawler, "HTTP ERROR: #{inspect error}")
         {:error, error}
     end
   end
+
+  defp retry(crawler, path, options, error, retries) do
+    if retries > 5 do
+      error(crawler, "HTTP ERROR (max retries reached): #{inspect error}")
+      error
+    else
+      debug(crawler, "HTTP retry #{inspect retries}: #{inspect error}")
+      :timer.sleep(:crypto.rand_uniform(retries*2000, retries*3000))
+      request(crawler, path, options, retries + 1)
+    end
+  end
+
 
   defp debug(crawler, message) do
     domain = crawler.instance.domain

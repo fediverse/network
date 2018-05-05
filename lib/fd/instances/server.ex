@@ -24,7 +24,7 @@ defmodule Fd.Instances.Server do
     instance = Instances.get_instance!(id)
     max_delay = if instance.monitor, do: 2, else: 15
     delay = (:crypto.rand_uniform(0, max_delay) * 60) * 1000
-    timer = :erlang.send_after(delay, self(), :crawl)
+    {:ok, timer} = :timer.send_after(delay, self(), :crawl)
     {:ok, %__MODULE__{id: id, instance: instance}}
   end
 
@@ -45,7 +45,10 @@ defmodule Fd.Instances.Server do
           Logger.error "Server #{inspect(id)} catched: #{inspect e}"
       end
     end
-    timer = :erlang.send_after(get_delay(instance), self(), :crawl)
+    timer = case :timer.send_after(get_delay(instance), self(), :crawl) do
+      {:ok, timer} -> timer
+      _ -> nil
+    end
     {:noreply, %__MODULE__{state | instance: instance, timer: timer}}
   end
 
