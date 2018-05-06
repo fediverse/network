@@ -24,8 +24,8 @@ defmodule Fd.Instances.Server do
     instance = Instances.get_instance!(id)
     {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {2, 15}
     delay = (:crypto.rand_uniform(min_delay, max_delay) * 60) * 1000
-    {:ok, _timer} = :timer.send_after(delay, self(), :crawl)
-    {:ok, %__MODULE__{id: id, instance: instance}}
+    {:ok, timer} = :timer.send_after(delay, self(), :crawl)
+    {:ok, %__MODULE__{id: id, instance: instance, timer: timer}}
   end
 
   @dev Mix.env == :dev
