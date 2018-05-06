@@ -35,7 +35,7 @@ defmodule Fd.Instances.Crawler do
 
   def down_http_codes, do: @down_http_codes
   def nodeinfo_servers, do: @nodeinfo_servers
-  def nodeinfo_hide_if_not_found_servers, do: @nodeinfo_hide_if_not_found
+  def nodeinfo_hide_if_not_found_servers, do: @nodeinfo_hide_if_not_found_servers
 
   defstruct [ :instance,
               :halted?,
@@ -478,10 +478,6 @@ defmodule Fd.Instances.Crawler do
     %Crawler{crawler | changes: changes, check: check}
   end
 
-  defp process_statusnet_version("Pleroma "<>version), do: {"Pleroma", version}
-  defp process_statusnet_version("postactiv-"<>version), do: {"PostActiv", version}
-  defp process_statusnet_version(version), do: {"GNUSocial", version}
-
   def process_results(crawler) do
     Logger.warn "Unprocessable results for #{crawler.instance.domain} (id #{crawler.instance.id}) -- #{inspect crawler}"
     check = %{"up" => true}
@@ -491,6 +487,12 @@ defmodule Fd.Instances.Crawler do
     |> Map.put("up", true)
     %Crawler{crawler | changes: changes, check: check}
   end
+
+
+  defp process_statusnet_version("Pleroma "<>version), do: {"Pleroma", version}
+  defp process_statusnet_version("postactiv-"<>version), do: {"PostActiv", version}
+  defp process_statusnet_version(version), do: {"GNUSocial", version}
+
 
   defp process_mastapi_version(nil), do: {"Unknown", nil}
   defp process_mastapi_version(string) do

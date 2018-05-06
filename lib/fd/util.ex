@@ -25,7 +25,7 @@ defmodule Fd.Util do
 
   def idna(domain) do
     domain
-    |> to_char_list()
+    |> to_charlist()
     |> :idna.from_ascii()
     |> to_string()
   end
@@ -33,7 +33,7 @@ defmodule Fd.Util do
   def from_idna(domain = "xn--"<>_), do: domain
   def from_idna(domain) do
     domain
-    |> to_char_list()
+    |> to_charlist()
     |> :idna.to_ascii()
     |> to_string()
   end

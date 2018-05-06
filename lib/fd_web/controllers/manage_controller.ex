@@ -13,18 +13,18 @@ defmodule FdWeb.ManageController do
     |> render("index.html", instance: instance, changeset: change)
   end
 
+  def index(conn, _) do
+    conn
+    |> assign(:title, "Manage your instance")
+    |> render("login.html")
+  end
+
   def update(conn = %{assigns: %{instance: instance}}, %{"instance" => instance_params}) do
     case Instances.update_manage_instance(instance, instance_params) do
       {:ok, instance} ->
         Server.crawl(instance.id)
         redirect(conn, to: manage_path(conn, :index))
     end
-  end
-
-  def index(conn, _) do
-    conn
-    |> assign(:title, "Manage your instance")
-    |> render("login.html")
   end
 
   def send_token(conn, %{"login" => %{"domain" => domain, "email" => email}}) do
