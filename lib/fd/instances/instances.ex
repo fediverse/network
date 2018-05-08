@@ -120,6 +120,16 @@ defmodule Fd.Instances do
     |> Enum.map(fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
     |> Enum.map(fn d -> Map.put(d, "date", get_date.(d)) end)
   end
+ 
+  def get_uptime_percentage(id) do
+    query = """
+    select (count(*) filter(where t.up = 'true') * 100.0) /
+        count(*) from (select ic.up from instance_checks as ic
+                 where ic.instance_id = #{id}
+                 order by ic.updated_at desc) t;
+    """
+    res = Ecto.Adapters.SQL.query!(Repo, query)
+  end
 
   def get_global_statistics(interval, limit \\ nil) when interval in @statistics_intervals_keys do
     {interval, default_limit} = Map.get(@statistics_intervals, interval)
