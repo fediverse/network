@@ -30,10 +30,10 @@ Instances should be checked at least every 85 minute and at most every 45 minute
 
 Currently it tries getting information from theses API endpoint:
 
+* Nodeinfo
 * Mastodon's `/api/v1/instance`
 * Statusnet-like `/api/statusnet/config, /api/statusnet/version`
 * PeerTube's `/api/v1/config`
-* Friendica, Hubzilla's `/nodeinfo/1.0, /nodeinfo/2.0`
 
 It fetches theses endpoints one-by-one and mixes information from the endpoint(s) who works.
 
@@ -77,5 +77,14 @@ Not yet, but very very soon
 
 ### Code
 
-It's seriously too ugly right now, but it'll be open-sourced when a bit more mature. Written in Elixir.
+It's really ugly right now, but you can find it [here](https://git.yt/random/fediverse-network). Written in Elixir.
+
+### Credits
+
+Thanks to the contributors on the code, especially to [@heacte](https://soc.ialis.me/@hecate) who's done a huge work on
+the stats queries,
+
+Thanks to everyone who helped me test, implemented nodeinfo endpoints, … ([@dashie](https://oldbytes.space/@dashie), …).
+
+Thanks to [@Famine](https://soc.ialis.me/@Famine) for the logo.
 
