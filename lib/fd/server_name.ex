@@ -11,8 +11,9 @@ defmodule Fd.ServerName do
     7   => "Friendica",
     8   => "Kroeg", # https://github.com/puckipedia/Kroeg
     9   => "Misskey",
-    10   => "GangGo", # not AP yet but soon https://github.com/ganggo/ganggo/pull/55
+    10  => "GangGo", # not AP yet but soon https://github.com/ganggo/ganggo/pull/55
     11  => "SocialHome", # not AP yet but soon too
+    12  => "Funkwhale",
   }
   @server_data %{
     0 => %{
@@ -81,6 +82,11 @@ defmodule Fd.ServerName do
       notice: "Not compatible ActivityPub yet",
       source: "https://github.com/jaywink/socialhome",
     },
+    12 => %{
+      description: "A modern, convivial and free music server",
+      link: "https://funkwhale.audio/",
+      source: "https://code.eliotberriot.com/funkwhale",
+    }
   }
 
   for {id, name} <- @servers do
