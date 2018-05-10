@@ -456,20 +456,27 @@ defmodule Fd.Instances.Crawler do
   def process_results(crawler = %{has_nodeinfo?: true}) do
     users = get_in(crawler.nodeinfo, ["usage", "users", "total"])
     posts = get_in(crawler.nodeinfo, ["usage", "localPosts"])
-    comments = get_in(crawler.nodeinfo, ["usage", "localComments"]) || 0
+    comments = get_in(crawler.nodeinfo, ["usage", "localComments"])
     server = Fd.ServerName.to_int(get_in(crawler.nodeinfo, ["software", "name"])||0)
     version = get_in(crawler.nodeinfo, ["software", "version"])
     name = get_in(crawler.nodeinfo, ["metadata", "nodeName"])
-    statuses = posts + comments
+    signup = Map.get(crawler.nodeinfo, "openRegistrations")
+    statuses = cond do
+      posts && comments -> posts + comments
+      posts -> posts
+      comments -> comments
+      true -> nil
+    end
 
-    check = crawler.check || %{}
+    check = (crawler.check || %{})
     |> Map.put("up", true)
     |> Map.put_new("users", users)
     |> Map.put_new("statuses", statuses)
     |> Map.put_new("server", server)
-    |> Map.put_new("version", process_statusnet_version(version))
+    |> Map.put_new("version", version)
+    |> Map.put_new("signup", signup)
 
-    changes = crawler.changes || %{}
+    changes = (crawler.changes || %{})
     |> Map.put("name", name)
     |> Map.put("last_up_at", DateTime.utc_now())
     |> Map.put("dead", false)
@@ -793,6 +800,7 @@ defmodule Fd.Instances.Crawler do
     follow_redirects = Keyword.get(options, :follow_redirects, false)
     json = Keyword.get(options, :json, true)
     method = Keyword.get(options, :method, :get)
+    accept = Keyword.get(options, :accept)
     body = Keyword.get(options, :body, "")
     {mon_ua, options} = if crawler.instance.monitor do
       mon_ua = " - monitoring enabled https://fediverse.network/monitoring"
@@ -807,9 +815,10 @@ defmodule Fd.Instances.Crawler do
     }
     headers = if json do
       Map.put(headers, "Accept", "application/json")
-    else
-      headers
-    end
+    else headers end
+    headers = if accept do
+      Map.put(headers, "Accept", accept)
+    else headers end
     case HTTPoison.request(method, "https://#{domain}#{path}", body, headers, options) do
       {:ok, response = %HTTPoison.Response{status_code: 200, body: body}} ->
         info(crawler, "http ok - #{inspect method} - #{inspect path}")

@@ -15,7 +15,7 @@ defmodule Fd.Instances.Crawler.Nodeinfo do
   @down_http_codes Crawler.down_http_codes()
 
   defp query_well_known(crawler) do
-    case request(crawler, "/.well-known/nodeinfo") do
+    case request(crawler, "/.well-known/nodeinfo", [accept: "application/jrd+json, application/json"]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         debug(crawler, "got /.well-known/nodeinfo " <> inspect(body))
         %Crawler{crawler | has_nodeinfo?: true, nodeinfo_schema: body}
@@ -24,7 +24,7 @@ defmodule Fd.Instances.Crawler.Nodeinfo do
         debug(crawler, ".well-known/nodeinfo is not found. #{inspect code}")
         %Crawler{crawler | has_nodeinfo?: false}
       {:ok, %HTTPoison.Response{status_code: code}} when code not in @down_http_codes  ->
-        debug(crawler, "nodeinfo responded with an invalid code, maybe down or not found: #{inspect code}")
+        debug(crawler, "nodeinfo well-known responded with an invalid code, maybe down or not found: #{inspect code}")
         crawler
       {:error, %Jason.DecodeError{}} ->
         debug(crawler, "nodeinfo json decode error, skipping")
@@ -58,13 +58,13 @@ defmodule Fd.Instances.Crawler.Nodeinfo do
         debug(crawler, "got nodeinfo#{inspect version} #{inspect path} " <> inspect(body))
         %Crawler{crawler | has_nodeinfo?: true, nodeinfo: body}
       {:ok, %HTTPoison.Response{status_code: code}} when code in @not_found ->
-        debug(crawler, "nodeinfo is not found. #{inspect code}")
+        debug(crawler, "nodeinfo #{path} is not found. #{inspect code}")
         %Crawler{crawler | has_nodeinfo?: false}
       {:ok, %HTTPoison.Response{status_code: code}} when code not in @down_http_codes  ->
-        debug(crawler, "nodeinfo responded with an invalid code, maybe down or not found: #{inspect code}")
+        debug(crawler, "nodeinfo #{path} responded with an invalid code, maybe down or not found: #{inspect code}")
         crawler
       {:error, %Jason.DecodeError{}} ->
-        debug(crawler, "nodeinfo json decode error, skipping")
+        debug(crawler, "nodeinfo #{path} json decode error, skipping")
         crawler
       failed ->
         debug(crawler, "host is down " <> inspect(failed))
