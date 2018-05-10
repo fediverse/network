@@ -120,6 +120,55 @@ defmodule Fd.Instances do
     |> Enum.map(fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
     |> Enum.map(fn d -> Map.put(d, "date", get_date.(d)) end)
   end
+ 
+  def get_uptime_percentage(id) do
+    query = """
+    select (count(*) filter(where t.up = 'true') * 100.0) /
+        count(*) from (select ic.up from instance_checks as ic
+                 where ic.instance_id = #{id}
+                 order by ic.updated_at desc) t;
+    """
+    res = Ecto.Adapters.SQL.query!(Repo, query)
+  end
+
+  def get_global_statistics(interval, limit \\ nil) when interval in @statistics_intervals_keys do
+    {interval, default_limit} = Map.get(@statistics_intervals, interval)
+    limit = unless limit do
+      default_limit
+    else
+      limit
+    end
+    query = """
+    SELECT time_bucket('#{interval}', updated_at) as date,
+      last(users, updated_at) as users,
+      last(statuses, updated_at) as statuses,
+      last(peers, updated_at) as peers,
+      last(emojis, updated_at) as emojis,
+      (last(users, updated_at) - first(users, updated_at)) as new_users,
+      (last(statuses, updated_at) - first(statuses, updated_at)) as new_statuses,
+      (last(peers, updated_at) - first(peers, updated_at)) as new_peers,
+      (last(emojis, updated_at) - first(emojis, updated_at)) as new_emojis
+    FROM instance_checks
+    WHERE up = 'true'
+    GROUP BY date
+    ORDER BY date DESC
+    LIMIT #{limit}
+    """
+
+    res = Ecto.Adapters.SQL.query!(Repo, query)
+    get_date = fn(map) ->
+      {date, {h, m, s, ms}} = Map.get(map, "date")
+      hour = {h, m, s}
+
+      {date, hour}
+      |> NaiveDateTime.from_erl!(ms)
+      |> DateTime.from_naive!("Etc/UTC")
+    end
+
+    res.rows
+    |> Enum.map(fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
+    |> Enum.map(fn d -> Map.put(d, "date", get_date.(d)) end)
+  end
 
   def switch_flag(id, flag, bool) when is_boolean(bool) do
     instance = get_instance!(id)

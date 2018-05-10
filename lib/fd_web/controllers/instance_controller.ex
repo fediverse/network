@@ -107,8 +107,8 @@ defmodule FdWeb.InstanceController do
   end
 
   def stats(conn, params = %{"instance_id" => id}) do
-    instance      = Instances.get_instance_by_domain!(id)
-    stats         = get_instance_stats(instance, params)
+    instance = Instances.get_instance_by_domain!(id)
+    stats    = get_instance_stats(instance, params)
 
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} statistics")

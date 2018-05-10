@@ -19,6 +19,7 @@ defmodule FdWeb.Router do
     #resources "/accounts", AccountController
     get "/info", PageController, :info
     get "/monitoring", PageController, :monitoring
+    get "/stats", PageController, :stats
 
     # Define /pleroma, /mastodon, …
     for s <- Fd.ServerName.list_names do
