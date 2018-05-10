@@ -22,8 +22,6 @@ export default class extends Controller {
       target: "#"+targetId,
       x_accessor: 'date',
       y_accessor: 'value',
-      xax_count: 4,
-      yax_count: 2,
       left: 30,
       right: 0,
       top: 15,
@@ -34,9 +32,7 @@ export default class extends Controller {
           d3.select("#"+targetId+ " svg .mg-active-datapoint").text(text)
         }
       },
-      missing_if_zero: true,
-      animate_on_load: true,
-      y_extended_ticks: false
+      animate_on_load: true
     })
   }
 }
