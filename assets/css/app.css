@@ -57,7 +57,7 @@ footer {
 header.header h1 a {
   line-height: 71px;
 }
-header.header h1 a:hover {
+header.header h1 a:hover, header.header h1 a:active {
   color: #d64d4d;
   text-decoration: none;
 }
