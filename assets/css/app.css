@@ -54,6 +54,16 @@ footer {
   margin-top: 4rem;
   font-size: 1.2rem;
 }
+header.header h1 a {
+  line-height: 71px;
+}
+header.header h1 a:hover {
+  color: #d64d4d;
+  text-decoration: none;
+}
+header.header h1 > a > img {
+  height: 71px;
+}
 
 thead, th {
   position: sticky;
