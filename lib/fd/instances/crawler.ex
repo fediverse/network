@@ -804,9 +804,9 @@ defmodule Fd.Instances.Crawler do
     body = Keyword.get(options, :body, "")
     {mon_ua, options} = if crawler.instance.monitor do
       mon_ua = " - monitoring enabled https://fediverse.network/monitoring"
-      {mon_ua, @hackney_mon_opts}
+      {mon_ua, [hackney: @hackney_mon_opts]}
     else
-      {"", @hackney_opts}
+      {"", [hackney: @hackney_opts]}
     end
     options = [follow_redirect: follow_redirects] ++ options
     dev_ua = if @env == :dev, do: " [dev]", else: ""
