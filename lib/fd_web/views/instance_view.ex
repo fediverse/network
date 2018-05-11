@@ -56,12 +56,11 @@ defmodule FdWeb.InstanceView do
 
 
   def format_stat(:mini, keys, value) do
-    content_tag(:span, ["(", to_string(value), ")"], title: Enum.join(keys, " "), class: "stat-"<>Enum.join(keys, "-"))
+    content_tag(:span, ["(", to_string(value), ")"], title: join(keys, " "), class: "stat-"<>join(keys, "-"))
   end
   def format_stat(:inline, keys, value) do
-    content_tag(:span, to_string(value), title: Enum.join(keys, " "), class: "stat-"<>Enum.join(keys, "-"))
+    content_tag(:span, to_string(value), title: join(keys, " "), class: "stat-"<>join(keys, "-"))
   end
-
 
   def name(instance = %Instance{}) do
     if instance.name && clean_name(instance.name, instance.domain) do
@@ -103,5 +102,17 @@ defmodule FdWeb.InstanceView do
     end
   end
   def server_info(_), do: nil
+
+  defp join(keys, joiner) do
+    keys
+    |> IO.inspect
+    |> Enum.map(fn
+      ["per_server", id, key] -> [Fd.ServerName.from_int(id), key]
+      val -> val
+    end)
+    |> List.flatten()
+    |> Enum.join(joiner)
+    |> IO.inspect
+  end
 
 end
