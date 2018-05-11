@@ -3,31 +3,33 @@
 <table class="table table-condensed table-hover">
   <thead>
     <tr>
-      <th>status</th>
+      <th>&nbsp;</th>
       <th>instance</th>
+      <th>at</th>
       <th>server</th>
       <th>signup</th>
       <th>users</th>
       <th>statuses</th>
       <th>peers</th>
       <th>emojis</th>
-      <th>at</th>
     </tr>
   </thead>
   <tbody>
     <%= for check <- @checks do %>
       <tr>
         <td><span class="badge badge-up-<%= to_string(check.up) %>">&nbsp;</span></td>
-        <td><%= if check.instance.hidden do %>
-          <i class="text-muted">private</i>
-        <% else %>
-          <%= link check.instance.domain, to: instance_path(@conn, :show, check.instance) %>
-        <% end %>
-        <%= if check.instance.dead, do: content_tag(:sup, "☨") %>
-        <%= if check.instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
+        <td>
+          <%= if check.instance.hidden do %>
+            <i class="text-muted">private</i>
+          <% else %>
+            <%= link check.instance.domain, to: instance_path(@conn, :show, check.instance) %>
+          <% end %>
+          <%= if check.instance.dead, do: content_tag(:sup, "☨") %>
+          <%= if check.instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
         </td>
+        <td><%= link check.updated_at, to: instance_check_path(@conn, :show, check.instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
         <%= if check.error_s do %>
-          <td><%= check.error_s %></td>
+          <td colspan=6><span class="text-danger"><%= check.error_s %></span></td>
         <% else %>
           <td><%= Fd.ServerName.from_int(check.instance.server) %> <%= check.version %></td>
           <td><%= check.signup %></td>
@@ -36,7 +38,6 @@
           <td><%= check.peers %></td>
           <td><%= check.emojis %></td>
         <% end %>
-        <td><%= check.updated_at %></td>
       </tr>
     <% end %>
   </tbody>

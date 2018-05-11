@@ -5,6 +5,26 @@ defmodule FdWeb.InstanceView do
 
   import FdWeb.CommonView, only: [idna: 1]
 
+  def chart_tag_lazy(conn, idx, instance, names, params) do
+    chart_tag_lazy(conn, idx, instance, names, params, [])
+  end
+
+  def chart_tag_lazy(conn, idx, instance, names, params, img_params) when idx < 25 do
+    chart_tag(conn, instance, names, params, img_params)
+  end
+  def chart_tag_lazy(conn, idx, instance, names, params, img_params) do
+    path = instance_chart_path(conn, :show, instance, names, params)
+    opts = img_params
+    |> Keyword.put(:"data-src", path)
+    |> Keyword.put(:class, "lazy chartd")
+    tag(:img, opts)
+  end
+
+  def chart_tag(conn, instance, names, params, img_params \\ []) do
+    path = instance_chart_path(conn, :show, instance, names, params)
+    img_tag(path, Keyword.put(img_params, :class,  "chartd"))
+  end
+
   def active_section_class(%{assigns: %{section: active_section}}, section) when active_section == section do
     "active"
   end

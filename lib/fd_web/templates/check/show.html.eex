@@ -1,5 +1,11 @@
-<%= render "_header.html", conn: @conn, instance: @instance %>
+<%= FdWeb.InstanceView.render "_header.html", conn: @conn, instance: @instance %>
 
+<div class="panel panel-default">
+  <%= if @range? do %>
+    <div class="panel-heading">
+      <%= Enum.count(@checks) %> checks from <%= @from_time %> to <%= @to_time %>.
+    </div>
+  <% end %>
 <table class="table table-condensed">
   <thead>
     <tr>
@@ -32,4 +38,4 @@
     <% end %>
   </tbody>
 </table>
-
+</div>

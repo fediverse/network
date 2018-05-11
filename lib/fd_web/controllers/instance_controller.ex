@@ -152,7 +152,7 @@ defmodule FdWeb.InstanceController do
     {instances, filters, Fd.GlobalStats.get()}
   end
 
-  defp get_instance_stats(instance, params) do
+  def get_instance_stats(instance, params) do
     default_interval = if instance.monitor, do: "hourly", else: "3hour"
     interval      = Map.get(params, "interval", default_interval)
     stats         = Instances.get_instance_statistics(instance.id, interval)

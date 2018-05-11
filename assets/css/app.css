@@ -111,3 +111,16 @@ ul.filters > li.filter > ul.list > li:not(:last-child):after {
   color: grey;
 }
 
+li.check-list {
+  display: flex;
+}
+li.check-list > .check-info {
+  display: inline-block;
+  width: 2em;
+  padding-right: 1rem;
+}
+li.check-list > .check-entry {
+  display: inline-block;
+  width: 0.5em;
+  padding-right: 1rem;
+}

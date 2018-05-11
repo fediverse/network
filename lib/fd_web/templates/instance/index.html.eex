@@ -58,7 +58,7 @@
     </tr>
   </thead>
   <tbody>
-  <%= for instance <- @instances do %>
+    <%= for {instance, idx} <- Enum.with_index(@instances) do %>
     <tr>
       <td><span class="badge badge-up-<%= to_string(instance.up) %>">&nbsp;</span></td>
       <td><%= if instance.hidden do %>
@@ -70,8 +70,20 @@
       <%= if instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
       </td>
       <td><%= Fd.ServerName.from_int(instance.server) %> <%= instance.version %></td>
-      <td><%= instance.users %></td>
-      <td><%= instance.statuses %></td>
+      <td>
+        <%= if instance.users do %>
+          <%= chart_tag_lazy(@conn, idx, instance, "users_new.png", [style: "sparkline"], height: 16, width: 50) %>
+          &nbsp;
+        <% end %>
+        <%= instance.users %>
+      </td>
+      <td>
+        <%= if instance.statuses do %>
+          <%= chart_tag_lazy(@conn, idx, instance, "statuses_new.png", [style: "sparkline"], height: 16, width: 50) %>
+          &nbsp;
+        <% end %>
+        <%= instance.statuses %>
+      </td>
       <td><%= instance.peers %></td>
       <td><%= inspect(instance.signup) %></td>
       <%= if @filters["emojis"] do %>

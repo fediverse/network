@@ -81,10 +81,11 @@ It's really ugly right now, but you can find it [here](https://git.yt/random/fed
 
 ### Credits
 
-Thanks to the contributors on the code, especially to [@heacte](https://soc.ialis.me/@hecate) who's done a huge work on
-the stats queries,
+Thanks to the contributors on the code, especially to [@heacte](https://soc.ialis.me/@hecate) who's done a huge work on the stats queries,
 
 Thanks to everyone who helped me test, implemented nodeinfo endpoints, … ([@dashie](https://oldbytes.space/@dashie), …).
 
 Thanks to [@Famine](https://soc.ialis.me/@Famine) for the logo.
+
+Thanks to [chartd.co](https://chartd.co) for generating for us the png/svg charts used in lists.
 

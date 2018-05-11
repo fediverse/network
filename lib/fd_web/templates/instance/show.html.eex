@@ -10,7 +10,7 @@
         <%= if @instance.up == false do %>
           <li><strong class="text-warning">This instance may temporarily unavailable</strong>.<br />
             <small>The crawler is still in beta and may report incorrect checks. <%= unless @instance.monitor, do: "Also,
-            this instance is only checked one time per hour." %></li>
+            this instance is only checked one time per hour." %></small></li>
         <% end %>
       <% end %>
       <li>
@@ -74,22 +74,23 @@
 <table class="table table-condensed">
   <thead>
     <tr>
-      <th>status</th>
+      <th>&nbsp;</th>
+      <th>at</th>
       <th>users</th>
       <th>statuses</th>
       <th>peers</th>
       <th>emojis</th>
       <th>version</th>
       <th>signup</th>
-      <th>at</th>
     </tr>
   </thead>
   <tbody>
     <%= for check <- @checks do %>
       <tr>
         <td><span class="badge badge-up-<%= to_string(check.up) %>">&nbsp;</span></td>
+        <td><%= link check.updated_at, to: instance_check_path(@conn, :show, @instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
         <%= if check.error_s do %>
-          <td><%= check.error_s %></td>
+          <td colspan=6><strong class="text-danger"><%= check.error_s %></strong></td>
         <% else %>
           <td><%= check.users %></td>
           <td><%= check.statuses %></td>
@@ -98,7 +99,6 @@
           <td><%= check.version %></td>
           <td><%= check.signup %></td>
         <% end %>
-        <td><%= check.updated_at %></td>
       </tr>
     <% end %>
   </tbody>

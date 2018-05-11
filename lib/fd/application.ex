@@ -7,6 +7,7 @@ defmodule Fd.Application do
     import Supervisor.Spec
 
     Fd.Instances.Crawler.setup()
+    :ok = :hackney_pool.start_pool(:hackney_chartd, [{:timeout, 2000}, {:max_connections, 50}, {:connect_timeout, 2000}])
 
     # Define workers and child supervisors to be supervised
     children = [
@@ -49,7 +50,7 @@ defmodule Fd.Application do
     for instance_id <- mon_instance_ids ++ instance_ids ++ unknown_instance_ids do
       IO.puts "-- starting instance #{instance_id}"
       Fd.Instances.ServerSupervisor.start_child(instance_id)
-      :timer.sleep(:crypto.rand_uniform(2000, 15000))
+      :timer.sleep(:crypto.rand_uniform(1000, 5000))
     end
   end
 

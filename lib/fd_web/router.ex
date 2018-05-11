@@ -49,6 +49,9 @@ defmodule FdWeb.Router do
       get "/emojis", InstanceController, :emojis
       get "/peers", InstanceController, :peers
       get "/checks", InstanceController, :checks
+      get "/checks/:from_time", CheckController, :show, as: :check
+      get "/checks/:from_time/:to_time", CheckController, :show, as: :check
+      get "/chart/:name", InstanceChartController, :show, as: :chart
     end
 
     #resources "/tags", TagController
