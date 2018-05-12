@@ -27,7 +27,7 @@
           <%= if check.instance.dead, do: content_tag(:sup, "☨") %>
           <%= if check.instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
         </td>
-        <td><%= link check.updated_at, to: instance_check_path(@conn, :show, check.instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
+        <td><%= link format_date(check.updated_at, "normal"), to: instance_check_path(@conn, :show, check.instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
         <%= if check.error_s do %>
           <td colspan=6><span class="text-danger"><%= check.error_s %></span></td>
         <% else %>

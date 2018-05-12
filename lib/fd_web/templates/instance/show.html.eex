@@ -1,108 +1,182 @@
 <%= render "_header.html", conn: @conn, instance: @instance %>
 
-<div class="row">
-  <div class="col-md-3">
-    <ul>
-      <%= if @instance.dead do %>
-        <li><strong class="text-danger">This instance is closed</strong>.
-          <small>(marked manually or been unavailable for too long).</small></li>
-      <% else %>
-        <%= if @instance.up == false do %>
-          <li><strong class="text-warning">This instance may temporarily unavailable</strong>.<br />
-            <small>The crawler is still in beta and may report incorrect checks. <%= unless @instance.monitor, do: "Also,
-            this instance is only checked one time per hour." %></small></li>
-        <% end %>
-      <% end %>
-      <li>
-        <strong>Domain:</strong>
-        <%= link idna(@instance.domain), to: "https://#{@instance.domain}", target: "_blank" %>
-      </li>
-      <li>
-        <strong>Server:</strong>
-        <%= link Fd.ServerName.from_int(@instance.server || 0), to: Fd.ServerName.route_path(@instance.server || 0) %>
-        <%= if (@instance.server||0) == 0 do %>
-          <br />
-          <i class="text-warning"><strong>Warning:</strong> Instances with an unknown server <strong>may for now not be real instances</strong>.<br />
-            the crawler is still under development and may stumble upon non-instances. This will be fixed soon.</i>
-        <% end %>
-      </li>
-      <%= if @instance.hidden do %>
-        <li>This is a private instance. <small>Name, domain and links are hidden in lists.</small></li>
-      <% end %>
-      <%= li_item("Version", @instance.version) %>
-      <%= li_item("Users", @instance.users) %>
-      <%= li_item("Statuses", @instance.statuses) %>
-      <%= li_item("Peers", @instance.peers) %>
-      <%= li_item("Emojis", @instance.emojis) %>
-      <%= li_item("Characters limit", @instance.max_chars) %>
-      <%= unless @instance.dead do %>
-        <%= if @instance.signup == true or @instance.signup == false do %>
-          <%= if @instance.signup do %>
-            <li>Open registration</li>
-          <% else %>
-            <li>Closed registration</li>
-          <% end %>
-        <% else %>
-          <li>Registrations state unknown</li>
-        <% end %>
-      <% end %>
-      <li>View other instances on :&nbsp;
-        <%= if @instance.domain_suffix do %><%= link [".", idna(@instance.domain_suffix)], to: instance_tld_path(@conn, :index, idna(@instance.domain_suffix)) %><% end %>
-        <%= if Fd.Domain.total_count(@host_stats, @instance.domain_base) > 1 do %><%= link [idna(@instance.domain_base)], to: instance_domain_path(@conn, :index, idna(@instance.domain_base), up: "all", server: "all") %> <% end %>
-      </li>
-      <%= if @instance.monitor do %>
-        <li>Extended monitoring enabled.</li>
-      <% end %>
-      <li>Found <%= @instance.inserted_at %></li>
-    </ul>
-  </div>
-  <div class="col-md-9">
-    <%= if @instance.statuses do %>
-      <div class="miniGraph" data-controller="graph" data-rollover="New Statuses" data-id="mini-statuses-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_statuses) %>'>
-        <div id="mini-statuses-graph"></div>
+<div class="row justify-content-center statistic-rows">
+  <%= statistic_column("Users", @instance.users, class: "col") %>
+  <%= statistic_column("Statuses", @instance.statuses, class: "col") %>
+  <%= statistic_column("Peers", @instance.peers, class: "col") %>
+  <%= statistic_column("Emojis", @instance.emojis, class: "col") %>
+  <%= statistic_column("Max Chars", @instance.max_chars, class: "col") %>
+  <%= if @instance.server do %>
+    <div class="col">
+      <div class="statistic">
+        <div class="label">
+          <%= link(Fd.ServerName.from_int(@instance.server || 0), to: Fd.ServerName.route_path(@instance.server || 0)) %>
+        </div>
+        <div class="value">
+          <%= simplify_version(@instance.version || "?") %>
+        </div>
       </div>
-    <% end %>
-    <%= if @instance.users do %>
-    <div class="miniGraph" data-controller="graph" data-rollover="New Users" data-id="mini-users-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_users) %>'>
-      <div id="mini-users-graph"></div>
     </div>
-    <% end %>
-
-  </div>
+  <% end %>
 </div>
 
-<table class="table table-condensed">
-  <thead>
-    <tr>
-      <th>&nbsp;</th>
-      <th>at</th>
-      <th>users</th>
-      <th>statuses</th>
-      <th>peers</th>
-      <th>emojis</th>
-      <th>version</th>
-      <th>signup</th>
-    </tr>
-  </thead>
-  <tbody>
-    <%= for check <- @checks do %>
-      <tr>
-        <td><span class="badge badge-up-<%= to_string(check.up) %>">&nbsp;</span></td>
-        <td><%= link check.updated_at, to: instance_check_path(@conn, :show, @instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
-        <%= if check.error_s do %>
-          <td colspan=6><strong class="text-danger"><%= check.error_s %></strong></td>
-        <% else %>
-          <td><%= check.users %></td>
-          <td><%= check.statuses %></td>
-          <td><%= check.peers %></td>
-          <td><%= check.emojis %></td>
-          <td><%= check.version %></td>
-          <td><%= check.signup %></td>
+<%= if @instance.dead do %>
+  <div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">This instance is closed</h4>
+    <p class="mb-0">It have been unavailable for too long or marked manually.</p>
+  </div>
+<% else %>
+  <%= if @instance.up == false do %>
+    <div class="alert alert-warning">
+      <h4 class="alert-heading">This instance is temporarily unavailable</h4>
+      <p class="mb-0">
+        <%= if check = List.first(@checks) do %>
+          <strong><%= check.error_s %></strong> <%= format_date(check.updated_at) %>
+        <%= unless (@last_up_check == nil) do %>
+            and was last
+          available <%= format_date(@last_up_check.updated_at) %><% end %><br />
         <% end %>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+        <i><small>The crawler is still in beta and may report incorrect checks. <%= unless @instance.monitor, do:
+        "This instance is only checked one time per hour." %></small></i>
+      </p>
+    </div>
+  <% end %>
+<% end %>
+<%= if @instance.hidden do %>
+  <div class="alert alert-light">
+    <strong>This is a private instance</strong>. <small>Name, domain and links are hidden in lists.</small>
+  </div>
+<% end %>
+<%= if (@instance.server||0) == 0 do %>
+  <div class="alert alert-dark">
+    <strong>Warning:</strong> Instances with an unknown server <strong>may for now not be real instances</strong>. The crawler is still under development and may stumble upon non-instances. This will be fixed soon.
+  </div>
+<% end %>
 
+<%= if description = Map.get(@instance.mastapi_instance || %{}, "description") do %>
+  <div class="instance-description">
+    <%= raw HtmlSanitizeEx.Scrubber.scrub(Earmark.as_html!(description), FdWeb.Scrubber) %>
+  </div>
+<% end %>
 
-<small>id: <%= @instance.id %></small>
+<div class="row">
+  <div class="col-sm">
+    <ul class="infolist">
+      <!--<li>
+        <span class="label">Domain</span>
+        <span class="value"><%= link idna(@instance.domain), to: "https://#{@instance.domain}", target: "_blank" %></span>
+      </li>-->
+      <li>
+        <span class="label">Server</span>
+        <span class="value">
+          <%= if @instance.server do %>
+            <%= img_tag("https://static.fediverse.network/icons/servers/#{@instance.server}.png", class: "icon") %>
+            <%= link(Fd.ServerName.from_int(@instance.server), to: Fd.ServerName.route_path(@instance.server)) %>
+          <% else %>
+            Unknown
+          <% end %>
+        </span>
+        <ul>
+          <%= if @instance.version do %>
+            <li>
+              <span class="label">Version</span>
+              <span class="value"><%= @instance.version %></span>
+            </li>
+          <% end %>
+          <!--<%= if !Enum.empty?(supported_protocols(@instance)) do %>
+            <li>
+              <span class="label">Protocols</span>
+              <span class="value"><%= supported_protocols_list(@instance) %></span>
+            </li>
+          <% end %>-->
+        </ul>
+      </li>
+      <li>Found <%= format_date(@instance.inserted_at) %></li>
+    </ul>
+  </div>
+  <!--<div class="col-sm">
+    <ul class="infolist">
+      <li>
+        <span class="label">Host</span>
+        <ul>
+          <%= if Fd.Domain.total_count(@host_stats, @instance.domain_base) > 1 do %>  
+          <li>
+            <span class="label">Domain</span>
+            <span class="value">
+              <%= link [idna(@instance.domain_base)], to: instance_domain_path(@conn, :index, idna(@instance.domain_base), up: "all", server: "all") %>
+            </span>
+          </li>
+          <% end %>
+          <li>
+            <span class="label">IPs</span>
+            <span class="value"><a href="#">8.8.8.8</a>, <a href="#">2001::beef:dead:beef</a></span>
+          </li>
+          <li>
+            <span class="label">Network</span>
+            <span class="value"><a href="#">Online S.A.S</a>, <a href="#">Hetzner DE</a></span>
+          </li>
+          <%= if @instance.domain_suffix do %>
+            <li>
+              <span class="label">TLD</span>
+              <span class="value">
+                <%= link [".", idna(@instance.domain_suffix)], to: instance_tld_path(@conn, :index, idna(@instance.domain_suffix)) %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </li>
+    </ul>
+  </div>-->
+</div>
+
+<%= if @instance.statuses || @instance.users do %>
+  <h4>Activity
+    <small><small><%= link "Statistics >", to: instance_instance_path(@conn, :stats, @instance)%></small></small>
+  </h4>
+
+  <%= if @instance.statuses do %>
+    <div class="miniGraph" data-controller="graph" data-title="New Statuses" data-id="mini-statuses-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_statuses) %>'>
+      <div id="mini-statuses-graph"></div>
+    </div>
+  <% end %>
+  <%= if @instance.users do %>
+  <div class="miniGraph" data-controller="graph" data-title="New Users" data-id="mini-users-graph" data-ts='<%= raw Poison.encode!(@stats.mg_new_users) %>'>
+    <div id="mini-users-graph"></div>
+  </div>
+  <% end %>
+<% else %>
+  <p class="text-info">
+    Activity statistics are not available for this instance.
+  </p>
+<% end %>
+
+<%= if @checks do %>
+  <h4>Availablity
+    <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id)) %>%
+    <small><small class="text-muted">(last seven days)</small></small>
+    <small><small><%= link "Checks history >", to: instance_instance_path(@conn, :checks, @instance)%></small></small>
+  </h4>
+
+  <div class="check-badges-list">
+    <%= for check <- @checks do %><%= link(content_tag(:span, raw("&nbsp;"),
+                class: "check check-#{to_string(check.up)}"),
+                title: check.updated_at,
+                to: instance_check_path(@conn, :show, @instance, NaiveDateTime.to_iso8601(check.updated_at))) %><% end %>
+    <p class="text-muted">
+    <small>displaying from <%= format_date(List.first(@checks).updated_at) %> to <%= format_date(List.last(@checks).updated_at) %></small>
+    </p>
+  </div>
+<% else %>
+  <p class="text-info">
+    Availability statistics are not available for this instance.
+  </p>
+<% end %>
+
+<p class="text-muted text-center"><small>
+  <%= if @instance.monitor do %>
+    updating every ~2 minute (monitoring enabled),
+  <% else %>
+    updating evey hour,
+  <% end %>
+  last <%= format_date(@instance.updated_at) %> (#<%= @instance.id %>)
+</small></p>

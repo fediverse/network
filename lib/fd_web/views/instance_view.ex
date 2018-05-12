@@ -3,7 +3,56 @@ defmodule FdWeb.InstanceView do
 
   alias Fd.Instances.Instance
 
-  import FdWeb.CommonView, only: [idna: 1]
+  def simplify_version(string) when is_binary(string) do
+    simple = string
+    |> String.split(~r/[\s-]/, parts: 2)
+    |> List.first
+    |> (fn
+      string when byte_size(string) < 15 ->
+        string
+      _ -> nil
+    end).()
+
+    cond do
+      simple == string -> string
+      simple == nil -> simple
+      true ->
+        content_tag(:span, [simple, content_tag(:sup, "*")], [title: string])
+    end
+  end
+
+  def simplify_version(value), do: value
+
+  # TODO: Update when instances has a "protocols" field
+  def supported_protocols(instance) do
+    server_data = Fd.ServerName.data(instance.server)||%{}
+    Map.get(server_data, :protocols, [])
+  end
+
+  def supported_protocols_list(instance) do
+    protocols = supported_protocols(instance)
+    unless Enum.empty?(protocols) do
+      protos = Enum.map(protocols, fn(protocol) ->
+        data = Fd.ServerName.get_protocol_data(protocol)
+        if data do
+          img = img_tag(data.logo, alt: data.name, class: "icon")
+          link([img, raw("&nbsp;"), data.name], title: data.name, to: "/protocols/#{protocol}", class: "protocol-link")
+        end
+      end)
+      |> Enum.filter(fn(p) -> p end)
+      content_tag(:div, protos, class: "protocols-list")
+    end
+  end
+
+  def statistic_column(label, value), do: statistic_column(label, value, [])
+  def statistic_column(label, nil, options), do: nil
+  def statistic_column(label, value, options) do
+    value = content_tag(:div, value, class: "value")
+    label = content_tag(:div, label, class: "label")
+    statistic = content_tag(:div, [label, value], class: "statistic")
+    col_class = Keyword.get(options, :class, "col-sm")
+    content_tag(:div, statistic, class: col_class)
+  end
 
   def chart_tag_lazy(conn, idx, instance, names, params) do
     chart_tag_lazy(conn, idx, instance, names, params, [])
@@ -62,14 +111,21 @@ defmodule FdWeb.InstanceView do
     content_tag(:span, to_string(value), title: join(keys, " "), class: "stat-"<>join(keys, "-"))
   end
 
-  def name(instance = %Instance{}) do
-    if instance.name && clean_name(instance.name, instance.domain) do
-      domain = content_tag(:span, ["(", idna(instance.domain), ")"], class: "instance-domain")
-      [instance.name, " ", domain]
+  def name(instance), do: name(instance, [])
+  def name(instance = %Instance{name: name}, options) when is_binary(name) do
+    name = clean_name(String.downcase(instance.name), String.downcase(instance.domain))
+    if name do
+      if Keyword.get(options, :domain, true) do
+        domain = content_tag(:span, ["(", idna(instance.domain), ")"], class: "instance-domain")
+        [instance.name, " ", domain]
+      else
+        instance.name
+      end
     else
       idna(instance.domain)
     end
   end
+  def name(instance, options), do: idna(instance.domain)
 
   def li_item(_, nil), do: nil
 
@@ -85,10 +141,11 @@ defmodule FdWeb.InstanceView do
   def active_class_bool(true), do: "active"
   def active_class_bool(_), do: ""
 
-  def clean_name("Mastodon", _), do: nil
-  def clean_name("Pleroma", _), do: nil
+  def clean_name("mastodon", _), do: nil
+  def clean_name("pleroma", _), do: nil
   def clean_name(name, domain) when name == domain, do: nil
   def clean_name(name, _), do: name
+  def clean_name(nil, _), do: nil
 
   def server_info("known"), do: nil
   def server_info(name) when is_binary(name) do
@@ -105,14 +162,12 @@ defmodule FdWeb.InstanceView do
 
   defp join(keys, joiner) do
     keys
-    |> IO.inspect
     |> Enum.map(fn
       ["per_server", id, key] -> [Fd.ServerName.from_int(id), key]
       val -> val
     end)
     |> List.flatten()
     |> Enum.join(joiner)
-    |> IO.inspect
   end
 
 end

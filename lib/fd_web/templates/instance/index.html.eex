@@ -37,7 +37,7 @@
 
 <table class="table table-condensed table-hover">
   <thead>
-    <tr>
+    <tr class="">
       <th></th>
       <th>Instance</th>
       <th>Server</th>
@@ -59,7 +59,7 @@
   </thead>
   <tbody>
     <%= for {instance, idx} <- Enum.with_index(@instances) do %>
-    <tr>
+    <tr class="">
       <td><span class="badge badge-up-<%= to_string(instance.up) %>">&nbsp;</span></td>
       <td><%= if instance.hidden do %>
         <i class="text-muted">private</i>
@@ -69,7 +69,7 @@
       <%= if instance.dead, do: content_tag(:sup, "☨") %>
       <%= if instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
       </td>
-      <td><%= Fd.ServerName.from_int(instance.server) %> <%= instance.version %></td>
+      <td><%= Fd.ServerName.from_int(instance.server) %> <%= simplify_version(instance.version) %></td>
       <td>
         <%= if instance.users do %>
           <%= chart_tag_lazy(@conn, idx, instance, "users_new.png", [style: "sparkline"], height: 16, width: 50) %>
@@ -77,7 +77,7 @@
         <% end %>
         <%= instance.users %>
       </td>
-      <td>
+      <td >
         <%= if instance.statuses do %>
           <%= chart_tag_lazy(@conn, idx, instance, "statuses_new.png", [style: "sparkline"], height: 16, width: 50) %>
           &nbsp;

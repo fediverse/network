@@ -6,10 +6,37 @@
   padding : 5px 15px;
 }
 
+.smaller {
+  font-size: 0.8rem;
+}
+
+.instance-description {
+  max-height: 100px;
+  padding-left: 1rem;
+  margin-left: 1rem;
+  border-left: 2px solid lightgrey;
+  overflow: hidden;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.instance-description p:last-child {
+  margin-bottom: 0;
+}
+
 .chart{
     width: 33%;
     text-align:center;
     display: inline-block;
+}
+
+img.icon {
+  width: 16px;
+  height: 16px;
+}
+
+a.hidden-link, a.hidden-link:hover {
+  color: inherit;
+  text-decoration: none;
 }
 
 .miniGraph {
@@ -35,8 +62,11 @@
   fieldset { display: table-cell; }
 }
 
+/* Phoenix flash messages */
+.alert:empty { display: none; }
+
 * {
-  font-family: 'Work Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-family: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 a.active {
@@ -50,9 +80,24 @@ a.active {
   background-color: red;
 }
 
+.alert h4 {
+  margin: 0;
+  padding: 0;
+}
+
 footer {
   margin-top: 4rem;
-  font-size: 1.2rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid lightgrey;
+}
+footer p.text-muted {
+  font-size: 0.8rem;
+}
+
+header.header {
+  border-bottom: 1px solid grey;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 header.header h1 a {
   line-height: 71px;
@@ -63,6 +108,11 @@ header.header h1 a:hover, header.header h1 a:active {
 }
 header.header h1 > a > img {
   height: 71px;
+}
+
+.turbolinks-progress-bar {
+  height: 5px;
+  background-color: #d64d4d;
 }
 
 thead, th {
@@ -123,4 +173,57 @@ li.check-list > .check-entry {
   display: inline-block;
   width: 0.5em;
   padding-right: 1rem;
+}
+
+div.check-badges-list {
+  width: 100%;
+  overflow: hidden;
+}
+div.check-badges-list > a > .check {
+  display: inline-block;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  margin: 0;
+  padding: 0;
+  opacity: 0.9;
+}
+div.check-badges > a > .check:hover {
+  opacity: 1;
+}
+div.check-badges-list > a > .check-true {
+  background-color: #4c9937;
+}
+div.check-badges-list > a > .check-false {
+  background-color: #d64d4d;
+}
+div.check-badges-list > a > .check-nil {
+  background-color: orange;
+}
+
+div.statistic-rows div.col {
+  text-align: center;
+}
+div.statistic-rows div.statistic {
+  margin: 1em 0;
+  text-transform: uppercase;
+  display: inline-block;
+  text-align: center;
+}
+
+div.statistic-rows div.statistic > div.value, div.statistic-rows div.statistic > div.label {
+  display: inline;
+  vertical-align: middle;
+}
+div.statistic-rows div.statistic > div.value {
+  font-size: 1.5em;
+  line-height: 1em;
+  text-align: center;
+}
+div.statistic-rows div.statistic > div.label {
+  color: inherit;
+  display: block;
+  font-size: 0.9em;
+  text-align: center;
 }

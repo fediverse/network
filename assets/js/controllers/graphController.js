@@ -5,27 +5,35 @@ var MG = require("metrics-graphics")
 export default class extends Controller {
   connect() {
     const targetId = this.element.dataset.id;
+    const title = this.element.dataset.title;
     const rollover = this.element.dataset.rollover;
     const data = JSON.parse(this.element.dataset.ts).map(function(element) {
       return { 'date': new Date(Date.parse(element.date)), 'value': element.value};
     })
-    console.log("Prout id", targetId)
-    console.log("Data ", data)
+    if (this.element.dataset.noxaxis) {
+      var xAxis = false;
+    } else {
+      var xAxis = true;
+    }
     var last = data[data.length - 1]
     var first = data[0]
     MG.data_graphic({
       data: data,
       linked: true,
-      area: false,
+      area: true,
       full_width: true,
-      height: 130,
+      height: 150,
       target: "#"+targetId,
       x_accessor: 'date',
       y_accessor: 'value',
-      left: 30,
-      right: 0,
-      top: 15,
+      title: title,
+      top: 20,
+      decimals: 0,
       min_y_from_data: true,
+      y_rug: true,
+      x_axis: xAxis,
+      xax_count: 4,
+      //y_scale_type: 'log',
       mouseover: function(d, i) {
         if (rollover) {
           var text = rollover + ": " + d.date + " " + d.value;

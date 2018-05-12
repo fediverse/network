@@ -90,7 +90,8 @@ defmodule FdWeb.InstanceController do
   def show(conn, params = %{"id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
     iid           = instance.id
-    checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 35, order_by: [desc: c.updated_at])
+    checks        = Repo.all from(c in InstanceCheck, select: %InstanceCheck{up: c.up, updated_at: c.updated_at, error_s: c.error_s}, where:
+    c.instance_id == ^iid, limit: 220, order_by: [desc: c.updated_at])
     last_up_check = Instances.get_instance_last_up_check(instance)
     host_stats    = Fd.HostStats.get()
     stats         = get_instance_stats(instance, params)

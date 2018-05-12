@@ -17,7 +17,7 @@
     <%= for check <- @checks do %>
       <tr>
         <td><span class="badge badge-up-<%= to_string(check.up) %>">&nbsp;</span></td>
-        <td><%= link check.updated_at, to: instance_check_path(@conn, :show, @instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
+        <td><%= link format_date(check.updated_at, "normal"), to: instance_check_path(@conn, :show, @instance, NaiveDateTime.to_iso8601(check.updated_at)) %></td>
         <%= if check.error_s do %>
           <td colspan=6><strong class="text-danger"><%= check.error_s %></strong></td>
         <% else %>

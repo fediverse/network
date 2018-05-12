@@ -48,7 +48,8 @@ end
 release :fd do
   set version: current_version(:fd)
   set applications: [
-    :runtime_tools
+    :runtime_tools,
+    :earmark,
   ]
 end
 

@@ -40,6 +40,8 @@ defmodule FdWeb do
       import FdWeb.Router.Helpers
       import FdWeb.ErrorHelpers
       import FdWeb.Gettext
+
+      import FdWeb.CommonView, only: [idna: 1, format_date: 1, format_date: 2]
     end
   end
 

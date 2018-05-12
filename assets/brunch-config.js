@@ -61,7 +61,8 @@ exports.config = {
   npm: {
     enabled: true,
     styles: {
-      'metrics-graphics': ['dist/metricsgraphics.css']
+      'metrics-graphics': ['dist/metricsgraphics.css'],
+      'bootstrap': ['dist/css/bootstrap-reboot.css', 'dist/css/bootstrap.css', 'dist/css/bootstrap-grid.css']
     },
     globals: {
       //$: 'jquery',

@@ -1,21 +1,22 @@
-// Brunch automatically concatenates all files in your
-// watched paths. Those paths can be configured at
 import "phoenix_html";
+import Turbolinks from "turbolinks";
 import { Application } from "stimulus";
-var moment = require("moment");
-var LazyLoad = require("vanilla-lazyload");
+import moment from "moment"
+import "moment-timezone"
+import LazyLoad from "vanilla-lazyload";
 
 import GraphController from "./controllers/graphController"
-//import SparklineController from "./controllers/sparklineController"
+import TimeController from "./controllers/timeController"
+
+window.currentTimezone = moment.tz.guess();
 
 // Start Turbolinks
-var Turbolinks = require("turbolinks")
 Turbolinks.start()
 
 // Start Stimulus
 const application = Application.start()
 application.register("graph", GraphController)
-//application.register("sparkline", SparklineController)
+application.register("time", TimeController)
 
 // Start LazyLoad
 const lazyLoad = new LazyLoad();

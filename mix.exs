@@ -20,7 +20,7 @@ defmodule Fd.Mixfile do
   def application do
     [
       mod: {Fd.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :earmark]
     ]
   end
 
@@ -49,6 +49,9 @@ defmodule Fd.Mixfile do
       {:public_suffix, "~> 0.6.0"},
       {:swoosh, "~> 0.13"},
       {:phoenix_markdown, "~> 1.0"},
+      {:html_sanitize_ex, "~> 1.3.0-rc3"},
+      {:timex, "~> 3.3"},
+      {:earmark, "~> 1.2", runtime: true, override: true},
     ]
   end
 

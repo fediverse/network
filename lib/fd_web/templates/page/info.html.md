@@ -1,5 +1,7 @@
 ## Info
 
+**The site and its data is far from perfect yet!**
+
 ### Search Params
 {: #search-params}
 
@@ -19,9 +21,12 @@ Ordering:
 * **statuses** desc, asc. (instances without statuses stats are ignored)
 * **peers** desc, asc. (instances without peers stats are ignored)
 * **emojis** desc, asc. (instances without emojis stats are ignored)
+* **max_chars** desc, asc.
 
 ### How It Works
 {: #how-it-works}
+
+The whole section is a bit outdated and will be clarified later.
 
 #### Instance
 {: #instance}
@@ -77,9 +82,13 @@ Not yet, but very very soon
 
 ### Code
 
-It's really ugly right now, but you can find it [here](https://git.yt/random/fediverse-network). Written in Elixir.
+It's quite ugly right now, but you can find it at [git.yt/random/fediverse-network](https://git.yt/random/fediverse-network).
+
+Written in Elixir, uses PostgreSQL with TimescaleDB, and licensed under AGPL.
 
 ### Credits
+
+Mostly made and hosted by [@href](https://soc.ialis.me/@href).
 
 Thanks to the contributors on the code, especially to [@heacte](https://soc.ialis.me/@hecate) who's done a huge work on the stats queries,
 

@@ -23,10 +23,12 @@ defmodule Fd.ServerName do
       link: "https://gnu.io/social/",
       source: "https://git.gnu.io/gnu/gnu-social/",
       notice: "Statistics are not available",
+      protocols: ["ostatus"],
     },
     2 => %{
       link: "https://joinmastodon.org",
       source: "https://github.com/tootsuite/mastodon",
+      protocols: ["ostatus", "activitypub"],
       other_stats: [
         {"instances.social", "https://instances.social"},
         {"Mastodon Monitoring Project", "https://mnm.social/"},
@@ -37,6 +39,7 @@ defmodule Fd.ServerName do
       link: "https://pleroma.social",
       description: "Pleroma is an ActivityPub/OStatus server built on Elixir. New and rising!",
       source: "https://git.pleroma.social/pleroma/pleroma",
+      protocols: ["ostatus", "activitypub"],
       other_stats: [
         {"distsn.org list", "https://distsn.org/pleroma-instances.html"},
         {"instances.social", "https://instances.social"},
@@ -46,6 +49,7 @@ defmodule Fd.ServerName do
       description: "PeerTube is a video streaming platform",
       link: "https://joinpeertube.org",
       source: "https://github.com/Chocobozzz/PeerTube",
+      protocols: ["activitypub"],
       other_stats: [
         {"instances.joinpeertube.org", "https://instances.joinpeertube.org"}
       ],
@@ -54,23 +58,28 @@ defmodule Fd.ServerName do
       link: "https://hubzilla.org",
       source: "https://github.com/redmatrix/hubzilla",
       notice: "Statistics are not available for private instances",
+      protocols: ["ostatus", "zot"],
     },
     6 => %{
       link: "https://www.postactiv.com",
       source: "http://gitea.postactiv.com/postActiv/postActiv",
       notice: "Statistics are not available",
+      protocols: ["ostatus"],
     },
     7 => %{
       link: "https://friendi.ca/",
       source: "https://github.com/friendica/friendica",
       notice: "Statistics are not available for private instances",
+      protocols: ["ostatus"],
     },
     8 => %{
       description: "Experimental ActivityPub server in C#",
       source: "https://github.com/puckipedia/Kroeg",
+      protocols: ["activitypub"],
     },
     9 => %{
       source: "https://github.com/syuilo/misskey",
+      protocols: ["activitypub"],
     },
     10 => %{
       hidden: true,
@@ -86,7 +95,19 @@ defmodule Fd.ServerName do
       description: "A modern, convivial and free music server",
       link: "https://funkwhale.audio/",
       source: "https://code.eliotberriot.com/funkwhale",
+      protocols: ["activitypub"],
     }
+  }
+
+  @protocols %{
+    "ostatus" => %{
+      name: "OStatus",
+      logo: "https://static.fediverse.network/icons/ostatus.png",
+    },
+    "activitypub" => %{
+      name: "ActivityPub",
+      logo: "https://static.fediverse.network/icons/activitypub.png",
+    },
   }
 
   for {id, name} <- @servers do
@@ -118,6 +139,11 @@ defmodule Fd.ServerName do
   def list_names do
     Enum.map(@servers, fn({_, name}) -> name end) ++ [@default]
   end
+
+  for {id, data} <- @protocols do
+    def get_protocol_data(unquote(id)), do: unquote(Macro.escape(data))
+  end
+  def get_protocol_data(_), do: nil
 
   def list do
     stats = Fd.GlobalStats.get()

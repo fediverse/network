@@ -120,15 +120,42 @@ defmodule Fd.Instances do
     |> Enum.map(fn r -> Enum.zip(res.columns, r) |> Enum.into(%{}) end)
     |> Enum.map(fn d -> Map.put(d, "date", get_date.(d)) end)
   end
- 
+
   def get_uptime_percentage(id) do
-    query = """
-    select (count(*) filter(where t.up = 'true') * 100.0) /
-        count(*) from (select ic.up from instance_checks as ic
-                 where ic.instance_id = #{id}
-                 order by ic.updated_at desc) t;
-    """
-    res = Ecto.Adapters.SQL.query!(Repo, query)
+    get_uptime_percentage(id, :last_seven_days)
+  end
+
+  @spec get_uptime_percentage(Integer.t, :overall | :last_seven_days | {:time_range, DateTime.t, DateTime.t}) :: Float.t | nil
+
+  def get_uptime_percentage(id, :last_seven_days) do
+    finish = DateTime.utc_now()
+    start = Timex.shift(finish, days: -7)
+    get_uptime_percentage(id, {:time_range, start, finish})
+  end
+
+  def get_uptime_percentage(id, mode) do
+    query = case mode do
+      :overall ->
+        """
+        select (count(*) filter(where t.up = 'true') * 100.0) /
+            count(*) from (select ic.up from instance_checks as ic
+                     where ic.instance_id = #{id}
+                     order by ic.updated_at desc) t;
+        """
+      {:time_range, start, finish} ->
+        """
+        select (count(*) filter(where t.up = 'true') * 100.0) /
+            count(*) from (select ic.up from instance_checks as ic
+                     where ic.instance_id = #{id}
+                      and ic.updated_at between to_timestamp('#{start}', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+                        and to_timestamp('#{finish}', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+                     order by ic.updated_at) t;
+        """
+    end
+    case Ecto.Adapters.SQL.query!(Repo, query) do
+      %Postgrex.Result{rows: [[decimal]]} -> Decimal.to_float(decimal)
+      _ -> nil
+    end
   end
 
   def get_global_statistics(interval, limit \\ nil) when interval in @statistics_intervals_keys do
