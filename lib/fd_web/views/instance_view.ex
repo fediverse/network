@@ -144,8 +144,8 @@ defmodule FdWeb.InstanceView do
   def clean_name("mastodon", _), do: nil
   def clean_name("pleroma", _), do: nil
   def clean_name(name, domain) when name == domain, do: nil
-  def clean_name(name, _), do: name
   def clean_name(nil, _), do: nil
+  def clean_name(name, _), do: name
 
   def server_info("known"), do: nil
   def server_info(name) when is_binary(name) do

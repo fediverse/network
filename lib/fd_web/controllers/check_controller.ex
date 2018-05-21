@@ -27,7 +27,7 @@ defmodule FdWeb.CheckController do
     range? = !(from_time_iso == to_time_iso)
     checks = from(c in InstanceCheck,
       where: c.instance_id == ^iid and c.updated_at >= ^from_time and c.updated_at <= ^to_time,
-      order_by: [asc: c.updated_at],
+      order_by: [asc: c.updated_at]
     )
     |> Repo.all
     title = if range?, do: "from #{from_time} to #{to_time}", else: "at #{from_time}"
