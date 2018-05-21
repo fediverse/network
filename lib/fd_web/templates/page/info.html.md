@@ -75,26 +75,3 @@ From Mastodon API's `/api/v1/peers` only.
 
 From Mastodon API's `/api/v1/emojis` only.
 
-### API
-{: #api}
-
-Not yet, but very very soon
-
-### Code
-
-It's quite ugly right now, but you can find it at [git.yt/random/fediverse-network](https://git.yt/random/fediverse-network).
-
-Written in Elixir, uses PostgreSQL with TimescaleDB, and licensed under AGPL.
-
-### Credits
-
-Mostly made and hosted by [@href](https://soc.ialis.me/@href).
-
-Thanks to the contributors on the code, especially to [@heacte](https://soc.ialis.me/@hecate) who's done a huge work on the stats queries,
-
-Thanks to everyone who helped me test, implemented nodeinfo endpoints, … ([@dashie](https://oldbytes.space/@dashie), …).
-
-Thanks to [@Famine](https://soc.ialis.me/@Famine) for the logo.
-
-Thanks to [chartd.co](https://chartd.co) for generating for us the png/svg charts used in lists.
-

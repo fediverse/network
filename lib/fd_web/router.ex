@@ -18,8 +18,8 @@ defmodule FdWeb.Router do
   scope "/", FdWeb do
     pipe_through :browser # Use the default browser stack
 
-    #resources "/accounts", AccountController
     get "/info", PageController, :info
+    get "/about", PageController, :about
     get "/monitoring", PageController, :monitoring
     get "/stats", PageController, :stats
 
