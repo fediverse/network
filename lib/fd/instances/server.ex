@@ -22,7 +22,7 @@ defmodule Fd.Instances.Server do
   def init([id]) do
     Logger.debug "starting instance #{inspect id}"
     instance = Instances.get_instance!(id)
-    {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {2, 15}
+    {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {0, 8}
     delay = (:crypto.rand_uniform(min_delay, max_delay) * 60) * 1000
     {:ok, timer} = :timer.send_after(delay, self(), :crawl)
     {:ok, %__MODULE__{id: id, instance: instance, timer: timer}}
@@ -39,29 +39,45 @@ defmodule Fd.Instances.Server do
         Fd.Instances.Crawler.run(instance)
       rescue
         e ->
-          Logger.error "Server #{inspect(id)} rescued: #{inspect e}"
+        Sentry.capture_exception(e, [stacktrace: System.stacktrace(), extra: %{instance_id: id}])
+        Logger.error "Server #{inspect(id)} rescued: #{inspect e}"
       catch
         e ->
+          Sentry.capture_exception(e, [extra: %{instance_id: id}])
           Logger.error "Server #{inspect(id)} catched: #{inspect e}"
       end
     end
-    timer = case :timer.send_after(get_delay(instance), self(), :crawl) do
+    Fd.Cache.ctx_delete("Instance:#{instance.id}")
+    {delay, hibernate} = get_delay(instance)
+    timer = case :timer.send_after(delay, self(), :crawl) do
       {:ok, timer} -> timer
       _ -> nil
     end
-    {:noreply, %__MODULE__{state | instance: instance, timer: timer}}
+    state = %__MODULE__{state | instance: instance, timer: timer}
+    if hibernate do
+      {:noreply, state, :hibernate}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_info(unhandled, state) do
+    Logger.error "Server #{inspect(state.id)} unhandled info: #{inspect unhandled}"
+    {:noreply, state, :hibernate}
   end
 
   defp get_delay(instance) do
     cond do
-      instance.monitor -> :instance_monitor
       instance.dead -> :instance_dead
+      instance.settings && instance.monitor && instance.settings.keep_calm -> :instance_monitor_calm
+      instance.monitor -> :instance_monitor
+      instance.settings && instance.settings.keep_calm -> :instance_calm
       true -> :instance_default
     end
     |> Fd.Util.get_delay()
     |> (fn(delay) ->
       Logger.debug "Crawl delay for instance #{to_string(instance.id)} set to #{to_string(delay)}"
-      delay
+      {delay, delay > 900_000}
     end).()
   end
 

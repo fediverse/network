@@ -1,6 +1,9 @@
 defmodule FdWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :fd
 
+  plug FdWeb.PipelineInstrumenterPlug
+  plug FdWeb.MetricsExporterPlug
+
   socket "/socket", FdWeb.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.

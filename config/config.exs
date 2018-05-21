@@ -14,6 +14,7 @@ config :fd, FdWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "UknRWRgXICA0mCWa7QeT/M5pUPZoyZfUmdIsdSbCEh2ObH4mGcwxXwEqR5IgDJYp",
   render_errors: [view: FdWeb.ErrorView, accepts: ~w(html json)],
+  instrumenters: [FdWeb.PhoenixInstrumenter],
   pubsub: [name: Fd.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
@@ -22,13 +23,17 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+config :fd, :admin_instances, []
+
 config :fd, :instances,
   autostart: false,
   readrepair: false
 
 config :fd, :delays,
-  instance_default: {:rand, 45, 85},
+  instance_default: {:rand, 45, 60},
+  instance_calm: {:hour, 6},
   instance_monitor: 2,
+  instance_monitor_calm: 30,
   instance_dead: {:hour, 72}
 
 config :phoenix, :template_engines,
@@ -39,6 +44,13 @@ config :phoenix_markdown, :earmark, %{
   breaks: true
 }
 config :phoenix_markdown, :server_tags, :all
+
+config :fd, Fd.Cache,
+  adapter: Nebulex.Adapters.Local,
+  gc_interval: 3600
+
+config :fd, Fd.Repo,
+  loggers: [Fd.Repo.Instrumenter, Ecto.LogEntry]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

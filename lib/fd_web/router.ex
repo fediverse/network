@@ -1,5 +1,7 @@
 defmodule FdWeb.Router do
   use FdWeb, :router
+  use Plug.ErrorHandler
+  use Sentry.Plug
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -38,7 +40,8 @@ defmodule FdWeb.Router do
 
     # Manage
     get "/manage", ManageController, :index, as: :manage
-    put "/manage", ManageController, :update, as: :manage
+    get "/:instance_id/manage", ManageController, :show, as: :manage
+    put "/:instance_id/manage", ManageController, :update, as: :manage
     get "/manage/logout", ManageController, :logout
     post "/manage/login", ManageController, :send_token, as: :manage
     get "/manage/login/:token", ManageController, :login_by_token, as: :manage

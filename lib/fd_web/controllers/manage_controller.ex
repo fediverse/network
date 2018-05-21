@@ -6,11 +6,17 @@ defmodule FdWeb.ManageController do
 
   plug :verify_token_plug
 
-  def index(conn = %{assigns: %{instance: instance}}, _) do
+  def index(conn = %{assigns: %{instance: instance}}, params) do
+    id = Map.get(params, "instance_id", instance.domain)
+    admin? = Enum.member?(Application.get_env(:fd, :admin_instances), instance.id)
+    instance = cond do
+      admin? -> Instances.get_instance_by_domain!(id)
+      true -> instance
+    end
     change = Instances.change_instance(instance)
     conn
     |> assign(:title, "Manage #{Fd.Util.idna(instance.domain)}")
-    |> render("index.html", instance: instance, changeset: change)
+    |> render("index.html", instance: instance, changeset: change, admin: admin?)
   end
 
   def index(conn, _) do
@@ -19,11 +25,23 @@ defmodule FdWeb.ManageController do
     |> render("login.html")
   end
 
-  def update(conn = %{assigns: %{instance: instance}}, %{"instance" => instance_params}) do
+  def show(conn, params), do: index(conn, params)
+
+  def update(conn = %{assigns: %{instance: u_instance}}, params = %{"instance" => instance_params}) do
+    id = Map.get(params, "instance_id", u_instance.id)
+    admin? = Enum.member?(Application.get_env(:fd, :admin_instances), u_instance.id)
+    instance = cond do
+      admin? -> Instances.get_instance_by_domain!(id)
+      true -> u_instance
+    end
     case Instances.update_manage_instance(instance, instance_params) do
-      {:ok, instance} ->
+      {:ok, _} ->
         Server.crawl(instance.id)
-        redirect(conn, to: manage_path(conn, :index))
+        if instance == u_instance do
+          redirect(conn, to: manage_path(conn, :index))
+        else
+          redirect(conn, to: manage_path(conn, :show, instance))
+        end
     end
   end
 
@@ -34,7 +52,6 @@ defmodule FdWeb.ManageController do
       |> Repo.one
       |> Fd.LoginEmail.login()
       |> Fd.Mailer.deliver()
-      |> IO.inspect()
     end)
 
     conn

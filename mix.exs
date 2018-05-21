@@ -20,7 +20,7 @@ defmodule Fd.Mixfile do
   def application do
     [
       mod: {Fd.Application, []},
-      extra_applications: [:logger, :runtime_tools, :earmark]
+      extra_applications: [:logger, :runtime_tools, :earmark, :ex_shards, :ex2ms, :parse_trans]
     ]
   end
 
@@ -52,6 +52,14 @@ defmodule Fd.Mixfile do
       {:html_sanitize_ex, "~> 1.3.0-rc3"},
       {:timex, "~> 3.3"},
       {:earmark, "~> 1.2", runtime: true, override: true},
+      {:nebulex, "~> 1.0.0-rc.3"},
+      {:prometheus, "~> 4.1", override: true},
+      {:prometheus_ex, "~> 3.0", override: true},
+      {:prometheus_plugs, "~> 1.1.1"},
+      {:prometheus_phoenix, "~> 1.0"},
+      {:prometheus_ecto, "~> 1.0.3"},
+      #{:prometheus_process_collector, "~> 1.0"},
+      {:sentry, "~> 6.0.0"},
     ]
   end
 

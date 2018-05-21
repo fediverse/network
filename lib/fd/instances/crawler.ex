@@ -19,7 +19,8 @@ defmodule Fd.Instances.Crawler do
 
   require Logger
   alias __MODULE__
-  alias Fd.{Instances, Instances.Instance, Instances.InstanceCheck}
+  alias Fd.{Instances}
+  alias Fd.Instances.{Instance, InstanceCheck, Instrumenter}
 
   @hackney_pool :hackney_crawler
   @hackney_pool_opts [{:timeout, 150_000}, {:max_connections, 200}, {:connect_timeout, 150_000}]
@@ -128,7 +129,7 @@ defmodule Fd.Instances.Crawler do
 
     info(state, "finished in #{:erlang.convert_time_unit(total_duration, :native, :millisecond)}ms (pipeline took #{:erlang.convert_time_unit(pipeline_duration, :native, :millisecond)} ms)!")
 
-    if Application.get_env(:fd, :monitoring_alerts, false) && state.instance.monitor do
+    if Application.get_env(:fd, :monitoring_alerts, false) && state.instance.monitor && state.instance.settings && state.instance.settings.alerts_to_contact do
       spawn(fn() ->
         became_down? = Map.get(state.diffs, :became_down, false)
         became_up? = Map.get(state.diffs, :became_up, false)
@@ -508,8 +509,10 @@ defmodule Fd.Instances.Crawler do
       # FIXME: it wont work if the server is not in Fd.ServerName
       String.contains?(string, "compatible;") ->
         [_, server_and_version] = String.split(string, "(compatible; ")
-        [server, version] = String.split(server_and_version, " ", parts: 2)
-        {server, clean_string(version)}
+        case String.split(server_and_version, " ", parts: 2) do
+          [version] -> {nil, clean_string(version)}
+          [server, version] -> {server, clean_string(version)}
+        end
       # Old versions of Pleroma
       String.starts_with?(string, "Pleroma") ->
         [_, version] = String.split(string, " ", parts: 2)
@@ -801,6 +804,8 @@ defmodule Fd.Instances.Crawler do
     json = Keyword.get(options, :json, true)
     method = Keyword.get(options, :method, :get)
     accept = Keyword.get(options, :accept)
+    timeout = Keyword.get(options, :timeout, 15_000)
+    recv_timeout = Keyword.get(options, :recv_timeout, 15_000)
     body = Keyword.get(options, :body, "")
     {mon_ua, options} = if crawler.instance.monitor do
       mon_ua = " - monitoring enabled https://fediverse.network/monitoring"
@@ -808,7 +813,7 @@ defmodule Fd.Instances.Crawler do
     else
       {"", [hackney: @hackney_opts]}
     end
-    options = [follow_redirect: follow_redirects] ++ options
+    options = [timeout: timeout, recv_timeout: recv_timeout, follow_redirect: follow_redirects] ++ options
     dev_ua = if @env == :dev, do: " [dev]", else: ""
     headers = %{
       "User-Agent" => "fediverse.network crawler#{dev_ua} (https://fediverse.network/info#{mon_ua} root@fediverse.network)",
@@ -819,8 +824,10 @@ defmodule Fd.Instances.Crawler do
     headers = if accept do
       Map.put(headers, "Accept", accept)
     else headers end
+    start = :erlang.monotonic_time
     case HTTPoison.request(method, "https://#{domain}#{path}", body, headers, options) do
       {:ok, response = %HTTPoison.Response{status_code: 200, body: body}} ->
+        Instrumenter.http_request(path, response, start)
         info(crawler, "http ok - #{inspect method} - #{inspect path}")
         debug(crawler, "http body: " <>inspect(body))
         case json && Jason.decode(body) do
@@ -834,11 +841,14 @@ defmodule Fd.Instances.Crawler do
           false -> {:ok, response}
         end
       {:ok, response = %HTTPoison.Response{status_code: code}} when code in @retry_http_codes ->
+        Instrumenter.http_request(path, response, start)
         retry(crawler, path, options, {:ok, response}, retries)
       {:ok, response} ->
+        Instrumenter.http_request(path, response, start)
         info(crawler, "http ok")
         {:ok, response}
       {:error, error = %HTTPoison.Error{reason: reason}} when reason in [:timeout, :connect_timeout, :closed, :nxdomain] ->
+        Instrumenter.http_request(path, error, start)
         retry(crawler, path, options, {:error, error}, retries)
         #if retries > 4  do
         #  error(crawler, "HTTP TIMEOUT: (#{inspect reason} - max retries reached)")
@@ -849,6 +859,7 @@ defmodule Fd.Instances.Crawler do
         #  request(crawler, path, options, retries + 1)
         #end
       {:error, error} ->
+        Instrumenter.http_request(path, error, start)
         error(crawler, "HTTP ERROR: #{inspect error}")
         {:error, error}
     end
@@ -861,10 +872,10 @@ defmodule Fd.Instances.Crawler do
     else
       debug(crawler, "HTTP retry #{inspect retries}: #{inspect error}")
       :timer.sleep(:crypto.rand_uniform(retries*2000, retries*3000))
+      Instrumenter.retry_http_request()
       request(crawler, path, options, retries + 1)
     end
   end
-
 
   def debug(crawler, message) do
     domain = crawler.instance.domain

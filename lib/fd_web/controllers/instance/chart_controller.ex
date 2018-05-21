@@ -15,7 +15,7 @@ defmodule FdWeb.InstanceChartController do
 
   defp proxy(conn, id, name, params) do #when name in @graph_names do
     instance      = Instances.get_instance_by_domain!(id)
-    stats         = FdWeb.InstanceController.get_instance_stats(instance, params)
+    {:ok, stats, _ttl}         = FdWeb.InstanceController.get_instance_stats(instance, params)
 
     proxy_graph(conn, stats, name, params)
   end

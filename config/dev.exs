@@ -68,4 +68,5 @@ config :fd, :social,
   "fediversenetwork@pleroma.fr": "lolno"
 
 config :fd, :monitoring_alerts, false
+config :fd, :admin_instances, [1]
 

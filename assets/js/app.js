@@ -8,22 +8,24 @@ import LazyLoad from "vanilla-lazyload";
 import GraphController from "./controllers/graphController"
 import TimeController from "./controllers/timeController"
 
-window.currentTimezone = moment.tz.guess();
+document.addEventListener("DOMContentLoaded", function() {
+  window.currentTimezone = moment.tz.guess();
 
-// Start Turbolinks
-Turbolinks.start()
+  // Start Turbolinks
+  Turbolinks.start()
 
-// Start Stimulus
-const application = Application.start()
-application.register("graph", GraphController)
-application.register("time", TimeController)
+  // Start Stimulus
+  const application = Application.start()
+  application.register("graph", GraphController)
+  application.register("time", TimeController)
 
-// Start LazyLoad
-const lazyLoad = new LazyLoad();
+  // Start LazyLoad
+  const lazyLoad = new LazyLoad();
 
-// Turbolinks hooks
-document.addEventListener("turbolinks:load", function() {
-  lazyLoad.update();
+  // Turbolinks hooks
+  document.addEventListener("turbolinks:load", function() {
+    lazyLoad.update();
+  })
 })
 
 // import socket from "./socket"

@@ -1,27 +1,97 @@
-<h2>Manage <%= Fd.Util.idna(@instance.domain) %></h2>
+<div class="float-md-right">
+  <%= link "summary", to: instance_path(@conn, :show, @instance), class: "btn btn-default" %>
+  <%= link "stats", to: instance_instance_path(@conn, :stats, @instance), class: "btn btn-default" %>
+  <%= link "checks", to: instance_instance_path(@conn, :checks, @instance), class: "btn btn-default" %>
+  <%= link(idna(@instance.domain) <> " ❯", to: "https://#{@instance.domain}", class: "btn btn-default") %>
+</div>
+<h2>
+<h2>manage <strong><%= Fd.Util.idna(@instance.domain) %></strong></h2>
 
-<%= form_for @changeset, manage_path(@conn, :update), fn f -> %>
-  <div class="form-group">
-    <label>
-      <%= checkbox f, :monitor %>
-      Enable <a href="/monitoring">monitoring</a> (requests every 1-2 minutes) and alerts you by e-mail when down
+<%= form_for @changeset, manage_path(@conn, :update, @instance), fn f -> %>
+  <%= if @admin do %>
+    <div class="form-group">
+      <label>
+        <%= checkbox f, :dead %>
+        Dead
+      </label>
+    </div>
+  <% end %>
+  <%= unless @instance.dead do %>
+    <div class="form-group">
+      <label>
+        <%= checkbox f, :monitor %>
+        Enabled advanced monitoring
+        <p class="text-muted mb-0">
+          More precise uptime and statistics. <a href="/monitoring">Learn more</a>.
+          <%= if @instance.monitor do %>
+            <br />
+            <small>
+              This service is totally free but <a href="https://liberapay.com/href">please consider supporting</a> the hosting fees on Liberapay. :)
+            </small>
+          <% end %>
+        </p>
+      </label>
+    </div>
+    <%= inputs_for f, :settings, fn s -> %>
       <%= if @instance.monitor do %>
-        <br />
-        <small class="text-muted">
-          This service is totally free but <a href="https://liberapay.com/href">please consider supporting</a> our hosting fees! :)
-        </small>
+        <div class="form-group">
+          <label>
+            <%= checkbox s, :alerts_to_contact %>
+            Send monitoring alerts to <%= @instance.email %>
+          </label>
+        </div>
       <% end %>
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <%= checkbox f, :hidden %>
-      Hide instance domain/name/link in listings
-      <br><small class="text-muted">
-        Warning: this setting may be overwritten by your instance API (<a href="/info#private">more info</a>).
-        </small>
-    </label>
-  </div>
+      <div class="form-group">
+        <label>
+          <%= checkbox s, :keep_calm %>
+          Crawl less frequently
+          <br>
+          <small class="text-muted">
+            <%= if @instance.monitor, do: "Every half hour", else: "Every six hours" %>
+          </small>
+        </label>
+      </div>
+      <div class="form-group">
+        <label>
+          <%= checkbox s, :hidden %>
+          Hide instance domain/name/link in listings
+          <br>
+          <small class="text-muted">
+            Warning: this setting may override your instance API (<a href="/info#private">more info</a>).
+          </small>
+        </label>
+      </div>
+    <% end %>
+  <% else %>
+    <%= inputs_for f, :settings, fn s -> %>
+      <div class="alert alert-danger">
+        <h4 class="alert-heading">This instance have been marked as dead</h4>
+        <p class="mb-0">
+          This happens automatically when the instance has been down for more than one month or if it's marked manually by
+          administrators of fediverse.network.<br />
+          <br />
+          If this is a mistake please send an e-mail to <a href="mailto:root@fediverse.network">root@fediverse.network</a>.
+        </p>
+      </div>
+      <fieldset>
+        <div class="form-group">
+          <label>
+            <%= checkbox s, :hidden %>
+            This instance have been closed
+            <br>
+            <small class="text-muted">
+              Marks the instance as closed (instead of unreachable). Increase check delay by a month.
+            </small>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Reason <small class="text-muted">Markdown enabled</small></label>
+          <%= textarea s, :dead_reason, class: "form-control", rows: 5 %>
+        </div>
+      </fieldset>
+    <% end %>
+  <% end %>
+
   <%= submit "Save", class: "btn btn-primary" %>
   <%= link("Logout", to: manage_path(@conn, :logout), class: "btn btn-danger") %>
 <% end %>

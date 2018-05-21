@@ -61,7 +61,9 @@
     <%= for {instance, idx} <- Enum.with_index(@instances) do %>
     <tr class="">
       <td><span class="badge badge-up-<%= to_string(instance.up) %>">&nbsp;</span></td>
-      <td><%= if instance.hidden do %>
+      <td>
+        <%= if @filters["statuses"] || @filters["users"], do: [to_string(idx+1), ".", raw("&nbsp;")]%>
+        <%= if instance.hidden do %>
         <i class="text-muted">private</i>
       <% else %>
         <%= link name(instance), to: instance_path(@conn, :show, instance) %>

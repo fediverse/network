@@ -13,8 +13,10 @@ config :fd, :instances,
   readrepair: false
 
 config :fd, :delays,
-  instance_default: {:rand, 45, 85},
+  instance_default: {:rand, 45, 60},
+  instance_calm: {:hour, 6},
   instance_monitor: 2,
+  instance_monitor_calm: 30,
   instance_dead: {:hour, 72}
 
 import_config "prod.secret.exs"

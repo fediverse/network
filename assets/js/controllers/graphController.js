@@ -29,7 +29,7 @@ export default class extends Controller {
       title: title,
       top: 20,
       decimals: 0,
-      min_y_from_data: true,
+      //min_y_from_data: true,
       y_rug: true,
       x_axis: xAxis,
       xax_count: 4,

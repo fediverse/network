@@ -13,28 +13,28 @@ defmodule FdWeb.InstanceController do
   end
 
   def index(conn = %{request_path: "/all"}, params) do
-    {instances, filters, stats} = basic_filter(Map.put(params, "up", "all"))
+    {instances, filters, stats} = basic_filter(conn, Map.put(params, "up", "all"))
     conn
     |> assign(:title, "All Instances")
     |> render("index.html", stats: stats, instances: instances, title: "All Instances", filters: filters)
   end
 
   def index(conn = %{request_path: "/down"}, params) do
-    {instances, filters, stats} = basic_filter(Map.put(params, "up", "false"))
+    {instances, filters, stats} = basic_filter(conn, Map.put(params, "up", "false"))
     conn
     |> assign(:title, "Down Instances")
     |> render("index.html", stats: stats, instances: instances, title: "Down Instances", filters: filters)
   end
 
   def index(conn = %{request_path: "/oldest"}, params) do
-    {instances, filters, stats} = basic_filter(Map.put(params, "age", "oldest"))
+    {instances, filters, stats} = basic_filter(conn, Map.put(params, "age", "oldest"))
     conn
     |> assign(:title, "Oldest Instances")
     |> render("index.html", stats: stats, instances: instances, title: "Oldest Instances", filters: filters)
   end
 
   def index(conn = %{request_path: "/newest"}, params) do
-    {instances, filters, stats} = basic_filter(Map.put(params, "age", "newest"))
+    {instances, filters, stats} = basic_filter(conn, Map.put(params, "age", "newest"))
     conn
     |> assign(:title, "Newest Instances")
     |> render("index.html", stats: stats, instances: instances, title: "Newest Instances", filters: filters)
@@ -59,7 +59,7 @@ defmodule FdWeb.InstanceController do
     path = Fd.ServerName.route_path(s)
     def index(conn = %{request_path: unquote(path)}, params) do
       params = Map.put(params, "server", unquote(path))
-      {instances, filters, stats} = basic_filter(params)
+      {instances, filters, stats} = basic_filter(conn, params)
       conn
       |> assign(:title, unquote(s))
       |> render("index.html", stats: stats, instances: instances, title: "#{unquote(s)} Instances", filters: filters)
@@ -67,7 +67,7 @@ defmodule FdWeb.InstanceController do
   end
 
   def index(conn, params) do
-    {instances, filters, stats} = basic_filter(params)
+    {instances, filters, stats} = basic_filter(conn, params)
     render(conn, "index.html", stats: stats, instances: instances, title: "Instances", filters: filters)
   end
 
@@ -90,11 +90,10 @@ defmodule FdWeb.InstanceController do
   def show(conn, params = %{"id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
     iid           = instance.id
-    checks        = Repo.all from(c in InstanceCheck, select: %InstanceCheck{up: c.up, updated_at: c.updated_at, error_s: c.error_s}, where:
-    c.instance_id == ^iid, limit: 220, order_by: [desc: c.updated_at])
+    checks        = Fd.Instances.get_instance_last_checks_overview(instance, 220)
     last_up_check = Instances.get_instance_last_up_check(instance)
     host_stats    = Fd.HostStats.get()
-    stats         = get_instance_stats(instance, params)
+    stats         = Fd.Cache.lazy("web:i:#{instance.id}:stats", &get_instance_stats/2, [instance, params])
 
     if Application.get_env(:fd, :instances)[:readrepair] do
       Fd.Instances.Server.crawl(instance.id)
@@ -108,8 +107,8 @@ defmodule FdWeb.InstanceController do
   end
 
   def stats(conn, params = %{"instance_id" => id}) do
-    instance = Instances.get_instance_by_domain!(id)
-    stats    = get_instance_stats(instance, params)
+    instance      = Instances.get_instance_by_domain!(id)
+    stats         = Fd.Cache.lazy("web:i:#{instance.id}:stats", &get_instance_stats/2, [instance, params])
 
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} statistics")
@@ -120,8 +119,7 @@ defmodule FdWeb.InstanceController do
 
   def checks(conn, params = %{"instance_id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
-    iid           = instance.id
-    checks        = Repo.all from(c in InstanceCheck, where: c.instance_id == ^iid, limit: 500, order_by: [desc: c.updated_at])
+    checks        = Instances.get_instance_last_checks(instance, 500)
 
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} checks")
@@ -131,7 +129,10 @@ defmodule FdWeb.InstanceController do
   end
 
   @allowed_filters ["up", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers", "max_chars"]
-  defp basic_filter(params) do
+  defp basic_filter(conn,params) do
+    Fd.Cache.lazy("list:#{conn.request_path}", &run_basic_filter/1, [params])
+  end
+  defp run_basic_filter(params) do
     filters = params
     |> Enum.map(fn({param, value}) ->
       value = case value do
@@ -156,7 +157,7 @@ defmodule FdWeb.InstanceController do
   def get_instance_stats(instance, params) do
     default_interval = if instance.monitor, do: "hourly", else: "3hour"
     interval      = Map.get(params, "interval", default_interval)
-    stats         = Instances.get_instance_statistics(instance.id, interval)
+    {stats, ttl}         = Instances.get_instance_statistics(instance.id, interval)
     get_serie = fn(stats, key) ->
       Enum.map(stats, fn(stat) -> Map.get(stat, key, 0)||0 end)
       |> Enum.reverse()
@@ -173,7 +174,7 @@ defmodule FdWeb.InstanceController do
       end)
       |> Enum.reverse
     end
-    %{
+    stats = %{
       #dates: get_serie.(stats, "date"),
       #users: get_serie.(stats, "users"),
       #statuses: get_serie.(stats, "statuses"),
@@ -189,6 +190,7 @@ defmodule FdWeb.InstanceController do
       mg_new_emojis: get_mg_serie.(stats, "new_emojis", [non_neg: true]),
       interval: interval,
     }
+    {:ok, stats, ttl}
   end
 
   defp basic_filter_reduce({"up", "true"}, query) do

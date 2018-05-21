@@ -37,6 +37,8 @@ defmodule Fd.Instances.Instance do
     field :statusnet_config, :map
     field :peertube_config, :map
 
+    embeds_one :settings, Fd.Instances.InstanceSettings, on_replace: :delete
+
     has_many :checks, Fd.Instances.InstanceCheck
 
     timestamps()
@@ -56,7 +58,8 @@ defmodule Fd.Instances.Instance do
   @doc false
   def manage_changeset(%Instance{} = instance, attrs) do
     instance
-    |> cast(attrs, [:monitor, :hidden])
+    |> cast(attrs, [:monitor, :dead])
+    |> cast_embed(:settings)
   end
 
 end

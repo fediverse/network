@@ -23,7 +23,11 @@
 <%= if @instance.dead do %>
   <div class="alert alert-danger" role="alert">
     <h4 class="alert-heading">This instance is closed</h4>
-    <p class="mb-0">It have been unavailable for too long or marked manually.</p>
+    <%= if @instance.settings && @instance.settings.dead_reason do %>
+      <%= raw Earmark.as_html!(@instance.settings.dead_reason) %>
+    <% else %>
+      <p class="mb-0">It have been unavailable for too long or marked manually.</p>
+    <% end %>
   </div>
 <% else %>
   <%= if @instance.up == false do %>
