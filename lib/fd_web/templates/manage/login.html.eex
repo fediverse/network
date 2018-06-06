@@ -6,7 +6,7 @@
     <%= text_input f, :domain, class: "form-control" %>
   </div>
   <div class="form-group">
-    <%= label f, :email, "Email address" %>
+    <%= label f, :email, "Email address (the contect address listed in your instance)" %>
     <%= text_input f, :email, class: "form-control" %>
   </div>
   <%= submit "Login", class: "btn btn-default" %>
