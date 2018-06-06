@@ -10,7 +10,7 @@
   <thead>
     <tr>
       <th>&nbsp;</th>
-      <th>at</th>
+      <th>time</th>
       <th>users</th>
       <th>statuses</th>
       <th>peers</th>
