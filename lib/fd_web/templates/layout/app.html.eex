@@ -19,7 +19,7 @@
           <ul class="nav nav-pills">
             <li class="nav-item"><a class="nav-link" href="/">instances</a></li>
             <li class="nav-item"><a class="nav-link" href="/tld">TLDs</a></li>
-            <li class="nav-item"><a class="nav-link" href="/manage">manage</a></li>
+            <li class="nav-item"><a class="nav-link" href="/manage">manage</a> (enable monitoring, hide from listings)</li>
           </ul>
         </nav>
         <h1><a href="/"><img src="<%= static_path(@conn, "/images/logo.svg") %>"/>&nbsp;fediverse network</a></h1>
@@ -41,7 +41,6 @@
           &nbsp;
           <a href="/monitoring">Instance monitoring</a>.
           &nbsp;
-          <strong><a href="/manage">Manage your instance</a></strong> (enable monitoring, hide from listings).
           <br />
           <br />
           <small><strong>Follow fediverse.network on the fediverse:</strong><br/>
