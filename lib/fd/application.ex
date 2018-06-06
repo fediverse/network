@@ -52,7 +52,7 @@ defmodule Fd.Application do
     for instance_id <- mon_instance_ids ++ instance_ids ++ unknown_instance_ids do
       IO.puts "-- starting instance #{instance_id}"
       Fd.Instances.ServerSupervisor.start_child(instance_id)
-      :timer.sleep(:crypto.rand_uniform(250, 1000))
+      :timer.sleep(:crypto.rand_uniform(150, 500))
     end
   end
 

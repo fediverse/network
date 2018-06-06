@@ -72,6 +72,7 @@ defmodule Fd.Instances.Server do
       instance.settings && instance.monitor && instance.settings.keep_calm -> :instance_monitor_calm
       instance.monitor -> :instance_monitor
       instance.settings && instance.settings.keep_calm -> :instance_calm
+      instance.server == 0 -> :instance_calm
       true -> :instance_default
     end
     |> Fd.Util.get_delay()

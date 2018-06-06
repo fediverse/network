@@ -15,11 +15,18 @@ Other protocols than oStatus/ActivityPub may be added some day, for more details
 * Matrix: #fd:random.sh
 * IRC: irc.random.sh #fd (TLS mandatory, port 6697)
 
+### API
+{: #api}
+
+It's planned as the next step once the underlying crawler will be more correct. :)
+
 ### Code
 
 It's quite ugly right now, but you can find it at [git.yt/random/fediverse-network](https://git.yt/random/fediverse-network).
 
 Written in Elixir, uses PostgreSQL with TimescaleDB, and licensed under AGPL; hosted on the glorious FreeBSD.
+
+[Internal metrics](https://grafana.random.sh/dashboards/f/nUslNGVmz/fediverse-network) for the curious.
 
 ### Credits
 
@@ -32,9 +39,4 @@ Thanks to everyone who helped me test, implemented nodeinfo endpoints, … ([@da
 Thanks to [@Famine](https://soc.ialis.me/@Famine) for the logo.
 
 Thanks to [chartd.co](https://chartd.co) for generating for us the png/svg charts used in lists.
-
-### API
-{: #api}
-
-It's planned as the next step once the underlying crawler will be more correct. :)
 
