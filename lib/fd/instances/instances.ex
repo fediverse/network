@@ -150,7 +150,7 @@ defmodule Fd.Instances do
   end
 
   def get_uptime_percentage(id) do
-    get_uptime_percentage(id, :last_seven_days)
+    get_uptime_percentage(id, :last_thirty_days)
   end
 
   @spec get_uptime_percentage(Integer.t, :overall | :last_seven_days | {:time_range, DateTime.t, DateTime.t}) :: Float.t | nil
@@ -163,6 +163,11 @@ defmodule Fd.Instances do
   def get_uptime_percentage(id, :last_two_weeks) do
     finish = Date.utc_today() |> Timex.shift(days: 1)
     start = Timex.shift(finish, days: -15)
+    get_uptime_percentage(id, {:time_range, start, finish})
+  end
+  def get_uptime_percentage(id, :last_thirty_days) do
+    finish = Date.utc_today() |> Timex.shift(days: 1)
+    start = Timex.shift(finish, days: -31)
     get_uptime_percentage(id, {:time_range, start, finish})
   end
 

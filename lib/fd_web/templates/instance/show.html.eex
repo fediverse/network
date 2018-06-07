@@ -157,7 +157,7 @@
 <%= if @checks do %>
   <h4>Availablity
     <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id)) %>%
-    <small><small class="text-muted">(last seven days)</small></small>
+    <small><small class="text-muted">(last 31 days)</small></small>
     <small><small><%= link "Checks history >", to: instance_instance_path(@conn, :checks, @instance)%></small></small>
   </h4>
 
@@ -178,9 +178,9 @@
 
 <p class="text-muted text-center"><small>
   <%= if @instance.monitor do %>
-    updating every ~2 minute (monitoring enabled),
+    updating every minute (monitoring enabled),
   <% else %>
-    updating evey hour,
+    updating evey 30 minutes,
   <% end %>
   last <%= format_date(@instance.updated_at) %> (#<%= @instance.id %>)
 </small></p>
