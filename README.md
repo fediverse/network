@@ -9,6 +9,8 @@ Development dependencies:
 * TimescaleDB PostgreSQL extension
 * Node.JS, NPM
 
+You can create a timescaledb instance using the `startDevDB.sh` script. (this requires docker and you need to change the `DATA_DIR` variable in the script)
+
 ## Development setup
 
 Configure `config/dev.exs` if you need another db/user than `fd_dev` and `postgres`.
@@ -20,9 +22,9 @@ Checkout dependencies
 
 Create the database
 
-    mix ecto.migrate
+    mix ecto.create
 
-If your postgresql user is not a superuser, you will need to create the database manually and load the extensions:
+(Not needed for the docker iamge) If your postgresql user is not a superuser, you will need to create the database manually and load the extensions:
 
     psql -d fd_database
     create extension timescaledb;
