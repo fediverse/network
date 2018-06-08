@@ -11,7 +11,7 @@ defmodule Fd.Instances.Crawler do
   3. Update `Instance`
 
   Maybe:
-    - Could test if we get a reply on /api/z/1.0/channel/stream (so we can now it's hubzilla?)
+    - Could test if we get a reply on /api/z/1.0/channel/stream (so we can know it's hubzilla?)
 
   """
 
@@ -238,7 +238,11 @@ defmodule Fd.Instances.Crawler do
         else
           ""
         end
-        post("is down#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
+        if state.instance.settings.maintenance_mode? do
+          post("is undergoing planned maintenance#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
+        else
+          post("is down#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
+        end
       end
       if became_closed? do
         post("closed registrations", crawler.instance)
