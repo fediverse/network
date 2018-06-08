@@ -18,6 +18,6 @@ defmodule Fd.Repo.Migrations.InstanceCheck do
 
     execute "SELECT create_hypertable('instance_checks', 'updated_at', chunk_time_interval => interval '1 week')"
 
-    add_index(:instance_checks, [:instance_id, "updated_at DESC"])
+    #add_index(:instance_checks, [:instance_id, "updated_at DESC"])
   end
 end
