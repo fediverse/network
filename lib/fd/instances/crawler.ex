@@ -239,7 +239,7 @@ defmodule Fd.Instances.Crawler do
           ""
         end
         if crawler.state.instance.settings.maintenance_mode? do
-          post("is undergoing planned maintenance#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
+          post("is undergoing maintenance#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
         else
           post("is down#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
         end
