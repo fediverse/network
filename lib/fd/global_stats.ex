@@ -86,10 +86,10 @@ defmodule Fd.GlobalStats do
     Logger.info "up_users: #{inspect up_users}"
 
     %{
-      "instances" => %{"total" => total, "up" => up, "down" => total-up},
-      "users" => %{"total" => users, "up" => up_users, "down" => users-up_users},
-      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => statuses-up_statuses},
-      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => emojis-up_emojis},
+      "instances" => %{"total" => total, "up" => up, "down" => total-(up || 0)},
+      "users" => %{"total" => users, "up" => up_users, "down" => users-(up_users || 0)},
+      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => statuses-(up_statuses || 0)},
+      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => emojis-(up_emojis || 0)},
       "per_server" => per_server
     }
   end
