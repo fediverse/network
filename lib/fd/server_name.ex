@@ -14,6 +14,7 @@ defmodule Fd.ServerName do
     10  => "GangGo", # not AP yet but soon https://github.com/ganggo/ganggo/pull/55
     11  => "SocialHome", # not AP yet but soon too
     12  => "Funkwhale",
+    13  => "Plume",
   }
   @server_data %{
     0 => %{
@@ -96,6 +97,10 @@ defmodule Fd.ServerName do
       link: "https://funkwhale.audio/",
       source: "https://code.eliotberriot.com/funkwhale",
       protocols: ["activitypub"],
+    },
+    13 => %{
+      description: "A federated blog engine",
+      source: "https://github.com/Plume-org/Plume",
     }
   }
 
