@@ -67,9 +67,11 @@ defmodule Fd.GlobalStats do
     |> Enum.reduce(%{}, &per_server_reducer/2)
 
     [total, users, statuses, emojis] = from(i in Instance, select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
-    |> Repo.one
+                                      |> Repo.one
+                                      |> Enum.map(fn x -> if x == nil, do: 0, else: x end)
     [up, up_users, up_statuses, up_emojis] = from(i in Instance, where: i.up == true, select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
-    |> Repo.one
+                                      |> Repo.one
+                                      |> Enum.map(fn x -> if x == nil, do: 0, else: x end)
 
     per_server = Enum.reduce(per_server_all, %{}, fn({server_id, x=[total, users, statuses, emojis]}, acc) ->
       [up, up_users, up_statuses, up_emojis] = Map.get(per_server_up, server_id, [0, 0, 0, 0])
@@ -86,10 +88,10 @@ defmodule Fd.GlobalStats do
     Logger.info "up_users: #{inspect up_users}"
 
     %{
-      "instances" => %{"total" => total, "up" => up, "down" => total-(up || 0)},
-      "users" => %{"total" => (users || 0), "up" => (up_users || 0), "down" => (users||0)-(up_users || 0)},
-      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => (statuses || 0)-(up_statuses || 0)},
-      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => (emojis||0)-(up_emojis || 0)},
+      "instances" => %{"total" => total, "up" => up, "down" => total - up },
+      "users" => %{"total" => users, "up" => up_users, "down" => users - up_users},
+      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => statuses - up_statuses},
+      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => emojis - up_emojis},
       "per_server" => per_server
     }
   end
