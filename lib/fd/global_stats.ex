@@ -87,9 +87,9 @@ defmodule Fd.GlobalStats do
 
     %{
       "instances" => %{"total" => total, "up" => up, "down" => total-(up || 0)},
-      "users" => %{"total" => users, "up" => up_users, "down" => users-(up_users || 0)},
-      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => statuses-(up_statuses || 0)},
-      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => emojis-(up_emojis || 0)},
+      "users" => %{"total" => (users || 0), "up" => (up_users || 0), "down" => (users||0)-(up_users || 0)},
+      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => (statuses || 0)-(up_statuses || 0)},
+      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => (emojis||0)-(up_emojis || 0)},
       "per_server" => per_server
     }
   end
