@@ -19,4 +19,14 @@ config :fd, :delays,
   instance_monitor_calm: 15,
   instance_dead: {:hour, 336}
 
+config :sentry,
+  dsn: "https://public_key@app.getsentry.com/1",
+  environment_name: :prod,
+  included_environments: [:prod],
+  enable_source_code_context: true,
+  root_source_code_path: File.cwd!,
+  tags: %{
+    env: "production"
+  },
+
 import_config "prod.secret.exs"
