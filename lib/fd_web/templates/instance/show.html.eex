@@ -31,7 +31,11 @@
   </div>
 <% else %>
   <%= if @instance.up == false do %>
-    <div class="alert alert-warning">
+     <%= if @instance.settings && @instance.settings.maintenance_mode == true do %>
+      <div class="alert alert-secondary">
+     <% else %>
+      <div class="alert alert-warning">
+     <% end %>
       <h4 class="alert-heading">This instance is temporarily unavailable</h4>
       <p class="mb-0">
         <%= if check = List.first(@checks) do %>
@@ -39,6 +43,9 @@
         <%= unless (@last_up_check == nil) do %>
             and was last
           available <%= format_date(@last_up_check.updated_at) %><% end %><br />
+        <% end %>
+        <%= if @instance.settings && @instance.settings.maintenance_mode == true do %>
+          <strong>The administrator of this instance has enabled maintenance mode.</strong><br />
         <% end %>
         <i><small>The crawler is still in beta and may report incorrect checks. <%= unless @instance.monitor, do:
         "This instance is only checked one time per hour." %></small></i>

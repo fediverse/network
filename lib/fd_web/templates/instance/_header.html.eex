@@ -9,7 +9,13 @@
   <%= if @instance.dead do %>
     <span class="badge smaller badge-pill badge-danger">CLOSED</span>
   <% else %>
-    <%= unless @instance.up do %><span class="badge badge-warning">Down</span><% end %>
+    <%= unless @instance.up do %>
+      <%= if @instance.settings && @instance.settings.maintenance_mode == true do %>
+        <span class="badge badge-secondary">Maintenance</span>
+      <% else %>
+        <span class="badge badge-warning">Down</span>
+      <% end %>
+    <% end %>
     <%= if @instance.signup == true do %>
       <span class="badge smaller badge-pill badge-success">Open Registrations</span>
     <% end %>
