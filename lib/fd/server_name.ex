@@ -15,6 +15,8 @@ defmodule Fd.ServerName do
     11  => "SocialHome", # not AP yet but soon too
     12  => "Funkwhale",
     13  => "Plume",
+    14  => "Castling.Club",
+    15  => "Write.as",
   }
   @server_data %{
     0 => %{
@@ -74,8 +76,9 @@ defmodule Fd.ServerName do
       protocols: ["ostatus"],
     },
     8 => %{
-      description: "Experimental ActivityPub server in C#",
-      source: "https://github.com/puckipedia/Kroeg",
+      description: "Experimental ActivityPub server in Rust",
+      link: "http://puckipedia.com/kroeg",
+      source: "https://git.puckipedia.com/kroeg",
       protocols: ["activitypub"],
     },
     9 => %{
@@ -101,7 +104,21 @@ defmodule Fd.ServerName do
     13 => %{
       description: "A federated blog engine",
       source: "https://github.com/Plume-org/Plume",
-    }
+    },
+
+    # Castling is closed source and single instance so we hide it :)
+    14 => %{
+      hidden: true,
+      description: "A federated chess server",
+      link: "https://castling.club/",
+      protocols: ["activitypub"],
+    },
+    15 => %{
+      description: "",
+      link: "https://write.as/",
+      source: false,
+      protocols: ["activitypub"],
+    },
   }
 
   @protocols %{
