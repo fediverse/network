@@ -1,4 +1,5 @@
 defmodule Fd.LoginEmail do
+  require Logger
   import Swoosh.Email
   import Fd.Util, only: [idna: 1]
   import FdWeb.Router.Helpers
