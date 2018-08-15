@@ -43,7 +43,7 @@ defmodule Fd.Mixfile do
       {:cowboy, "~> 1.0"},
       {:hackney, "~> 1.12.1", override: true},
       {:httpoison, "~> 1.0", override: true},
-      {:distillery, "~> 1.5", runtime: false},
+      {:distillery, github: "bitwalker/distillery"},
       {:jason, "~> 1.0"},
       {:idna, "~> 5.1", override: true},
       {:public_suffix, "~> 0.6.0"},

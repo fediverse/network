@@ -70,3 +70,5 @@ config :fd, :social,
 config :fd, :monitoring_alerts, false
 config :fd, :admin_instances, [1]
 
+import_config "dev.secret.exs"
+
