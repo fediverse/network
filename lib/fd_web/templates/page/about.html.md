@@ -30,9 +30,7 @@ Written in Elixir, uses PostgreSQL with TimescaleDB, and licensed under AGPL; ho
 
 ### Credits
 
-Mostly made and hosted by [@href](https://soc.ialis.me/@href).
-
-Thanks to the [contributors on the code](https://git.yt/random/fediverse-network/graphs/master); especially to [@heacte](https://soc.ialis.me/@hecate) who's done a huge work on the stats queries,
+Developed by [contributors](https://git.yt/random/fediverse-network/graphs/master) ([@href](https://soc.ialis.me/@href), [@heacte](https://soc.ialis.me/@hecate), [@lerk](https://comm.network/@lerk)) and hosted by [@href](https://soc.ialis.me/@href).
 
 Thanks to everyone who helped me test, implemented nodeinfo endpoints, … ([@dashie](https://oldbytes.space/@dashie), …).
 
