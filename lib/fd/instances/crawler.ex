@@ -465,7 +465,10 @@ defmodule Fd.Instances.Crawler do
     server = Fd.ServerName.to_int(get_in(crawler.nodeinfo, ["software", "name"])||0)
     version = get_in(crawler.nodeinfo, ["software", "version"])
     name = get_in(crawler.nodeinfo, ["metadata", "nodeName"])
-    signup = Map.get(crawler.nodeinfo, "openRegistrations")
+    description = get_in(crawler.nodeinfo, ["metadata", "description"])
+    email = get_in(crawler.nodeinfo, ["metadata", "email"])
+    private = get_in(crawler.nodeinfo, ["metadata", "private"])
+    signup = get_in(crawler.nodeinfo, ["openRegistrations"])
     statuses = cond do
       posts && comments -> posts + comments
       posts -> posts
@@ -483,7 +486,10 @@ defmodule Fd.Instances.Crawler do
 
     changes = (crawler.changes || %{})
     |> Map.put("name", name)
+    |> Map.put("description", description)
+    |> Map.put("email", email)
     |> Map.put("last_up_at", DateTime.utc_now())
+    |> Map.put("hidden", private)
     |> Map.put("dead", false)
     |> Map.merge(check)
 
