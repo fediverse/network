@@ -46,7 +46,7 @@ Add an instance:
 
 Crawl an instance:
 
-    Fd.Instances.Server.crawl(instance.id)
+    Fd.crawl(domain | id)
 
 Switch flags for an instance:
 
@@ -58,4 +58,5 @@ Flags:
 * monitor
 * hidden
 * valid
+
 
