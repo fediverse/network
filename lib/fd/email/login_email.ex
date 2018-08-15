@@ -6,9 +6,6 @@ defmodule Fd.LoginEmail do
 
   def login(instance = %Fd.Instances.Instance{}) do
     key = Phoenix.Token.sign(FdWeb.Endpoint, Application.get_env(:fd, :email_login_salt), "instance:#{instance.id}:#{DateTime.utc_now() |> DateTime.to_unix}")
-    if Mix.env == :dev do
-      Logger.info("Login key: #{manage_url(FdWeb.Endpoint, :login_by_token, key)}")
-    end
     new()
     |> to({idna(instance.domain), instance.email})
     |> from({"fediverse.network", "accounts@email.fediverse.network"})
