@@ -13,7 +13,7 @@
   </head>
 
   <body>
-    <%= if Mix.env == :dev do %>
+    <%= if Fd.build_env() == :dev do %>
       <div style="background-color: #faa; border: 2px solid #f00; border-left: none; border-right:none; padding:8px;
       font-family: sans-serif; font-weight: 100; transform: rotate(-32deg); text-align: center; position: fixed;
       top: 32px; left: -164px; width: 512px; color: #a00; box-shadow: 0 0 5px 0 rgba(255,0,0,0.75);">DEVELOPMENT</div>
