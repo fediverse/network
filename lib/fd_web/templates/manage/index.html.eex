@@ -41,6 +41,14 @@
           </label>
         </div>
       <% end %>
+      <%= if @instance.monitor do %>
+        <div class="form-group">
+          <label>
+            <%= checkbox s, :maintenance_mode %>
+            Handle downtime as planned maintenance. <b>Remember to turn this off when you're done!</b>
+          </label>
+        </div>
+      <% end %>
       <div class="form-group">
         <label>
           <%= checkbox s, :keep_calm %>

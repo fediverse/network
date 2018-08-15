@@ -31,3 +31,5 @@ npm-debug.log
 *.dat
 /archived/
 /data/
+*.iml
+/.idea/
