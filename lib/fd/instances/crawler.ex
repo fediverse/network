@@ -445,8 +445,8 @@ defmodule Fd.Instances.Crawler do
   end
 
   def process_results(crawler = %{has_misskey?: true}) do
-    users = Map.get(crawler.misskey_stats || %{}, "usersCount")
-    statuses = Map.get(crawler.misskey_stats || %{}, "notesCount")
+    users = Map.get(crawler.misskey_stats || %{}, "originalUsersCount")
+    statuses = Map.get(crawler.misskey_stats || %{}, "originalNotesCount")
     version = Map.get(crawler.misskey_meta || %{}, "version")
     server = Fd.ServerName.to_int("misskey")
 
