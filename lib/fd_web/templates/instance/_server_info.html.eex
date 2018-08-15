@@ -8,7 +8,7 @@
   <%= if link = Map.get(@data, :link), do: [content_tag(:strong, link("Website", to: link)), raw("&nbsp;")] %>
   <%= if link = Map.get(@data, :source), do: [content_tag(:strong, link("Source code", to: link)), raw("&nbsp;")] %>
   <%= if Map.get(@data, :source) == false do %>
-    [content_tag(:strong, "Closed source / Commercial"), raw("&nbsp;")]
+    <%= [content_tag(:strong, "Closed source / Commercial"), raw("&nbsp;")] %>
   <% end %>
   <%= if other_stats = Map.get(@data, :other_stats) do %>
     <br />
