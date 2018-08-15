@@ -196,6 +196,8 @@ defmodule Fd.Instances do
         _ -> nil
       end
     end)
+  rescue
+    e in Postgrex.Error -> nil
   end
 
   def get_global_statistics(interval) when interval in @statistics_intervals_keys do

@@ -160,6 +160,14 @@ defmodule FdWeb.InstanceView do
   end
   def server_info(_), do: nil
 
+  def uptime_percentage(%Instance{id: id}) do
+    if uptime = Fd.Instances.get_uptime_percentage(id) do
+      Float.floor(uptime)
+    else
+      nil
+    end
+  end
+
   defp join(keys, joiner) do
     keys
     |> Enum.map(fn
