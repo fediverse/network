@@ -163,7 +163,7 @@
 
 <%= if @checks do %>
   <h4>Availablity
-    <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id)) %>%
+    <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id))%>%%
     <small><small class="text-muted">(last 31 days)</small></small>
     <small><small><%= link "Checks history >", to: instance_instance_path(@conn, :checks, @instance)%></small></small>
   </h4>
