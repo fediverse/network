@@ -25,8 +25,13 @@ defmodule FdWeb.InstanceView do
 
   # TODO: Update when instances has a "protocols" field
   def supported_protocols(instance) do
-    server_data = Fd.ServerName.data(instance.server)||%{}
-    Map.get(server_data, :protocols, [])
+    nodeinfo = get_in(instance.nodeinfo, ["protocols"]) || []
+    if nodeinfo && !Enum.empty?(nodeinfo) do
+      nodeinfo
+    else
+      server_data = Fd.ServerName.data(instance.server)||%{}
+      Map.get(server_data, :protocols, [])
+    end
   end
 
   def supported_protocols_list(instance) do
@@ -40,7 +45,7 @@ defmodule FdWeb.InstanceView do
         end
       end)
       |> Enum.filter(fn(p) -> p end)
-      content_tag(:div, protos, class: "protocols-list")
+      content_tag(:span, protos, class: "protocols-list")
     end
   end
 

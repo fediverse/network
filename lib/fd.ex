@@ -13,8 +13,8 @@ defmodule Fd do
   @doc "Crawls the instance at `domain`."
   @spec crawl(String.t | integer) :: nil
   def crawl(domain) when is_binary(domain) do
-    id = Fd.Instances.get_instance_by_domain!(domain_id)
-    Fd.Instances.Server.crawl(id)
+    instance = Fd.Instances.get_instance_by_domain!(domain)
+    Fd.Instances.Server.crawl(instance.id)
   end
   def crawl(id) when is_integer(id) do
     Fd.Instances.Server.crawl(id)

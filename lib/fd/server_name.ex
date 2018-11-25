@@ -18,6 +18,19 @@ defmodule Fd.ServerName do
     14  => "castling.club",
     15  => "write.as",
     16  => "MicroblogPub",
+    17  => "rustodon",
+    18  => "pixelfed",
+    19  => "reel2bits",
+    20  => "read.as",
+    21  => "writefreely",
+    22  => "Osada",
+    23  => "p3k",
+    24  => "red",
+    25  => "mobilizon",
+    26  => "activityrelay",
+    27  => "PubGate",
+    28  => "booth",
+    29  => "zap",
   }
   @server_data %{
     0 => %{
@@ -99,13 +112,13 @@ defmodule Fd.ServerName do
     },
     10 => %{
       slug: "ganggo",
-      hidden: true,
+      #hidden: true,
       notice: "Not compatible ActivityPub yet",
       source: "https://github.com/ganggo/ganggo"
     },
     11 => %{
       slug: "socialhome",
-      hidden: true,
+      #hidden: true,
       notice: "Not compatible ActivityPub yet",
       source: "https://github.com/jaywink/socialhome",
     },
@@ -120,19 +133,22 @@ defmodule Fd.ServerName do
       slug: "plume",
       description: "A federated blog engine",
       source: "https://github.com/Plume-org/Plume",
+      protocols: ["activitypub"],
     },
 
     # Castling is closed source and single instance so we hide it :)
     14 => %{
       slug: "castlingclub",
-      hidden: true,
+      hidden: false,
       description: "A federated chess server",
       link: "https://castling.club/",
+      source: false,
       protocols: ["activitypub"],
     },
     15 => %{
       slug: "writeas",
       description: "",
+      hidden: true,
       link: "https://write.as/",
       description: "Simple, connected, privacy-focused blogging platform",
       source: false,
@@ -146,6 +162,89 @@ defmodule Fd.ServerName do
       source: "https://github.com/tsileo/microblog.pub",
       protocols: ["activitypub"],
     },
+    17 => %{
+      name: "Rustodon",
+      slug: "rustodon",
+      description: "A Mastodon-compatible, ActivityPub-speaking server in Rust",
+      source: "https://github.com/rustodon/rustodon",
+      protocols: ["activitypub"],
+    },
+    18 => %{
+      name: "PixelFed",
+      slug: "pixelfed",
+      description: "Federated Image Sharing",
+      source: "https://github.com/pixelfed",
+      link: "https://pixelfed.org",
+      protocols: ["activitypub"],
+    },
+    19 => %{
+      name: "reel2bits",
+      slug: "reel2bits",
+      description: "Something something like soundcloud but not like soundcloud",
+      source: "https://dev.sigpipe.me/dashie/reel2bits",
+      protocols: ["activitypub"],
+    },
+    20 => %{
+      name: "read.as",
+      slug: "readas",
+      description: "Long-form ActivityPub-enabled reader",
+      source: "https://github.com/writeas/Read.as",
+      link: "https://read.as",
+      protocols: ["activitypub"],
+    },
+    21 => %{
+      name: "WriteFreely",
+      slug: "writefreely",
+      description: "Painless, simple, federated blogging platform",
+      source: "https://github.com/writeas/writefreely",
+      link: "https://writefreely.org/",
+      protocols: ["activitypub"],
+    },
+    22 => %{
+      name: "Osada",
+      slug: "osada",
+      description: "Bridge between zot6 and non-nomadic protocols",
+      source: "https://framagit.org/macgirvin/osada",
+      link: "https://zotlabs.com/osada/",
+      protocols: ["activitypub", "zot"],
+    },
+    23 => %{
+      name: "p3k",
+      slug: "p3k",
+      source: "https://indieweb.org/p3k"
+    },
+    24 => %{
+      name: "red",
+      slug: "red",
+      source: "https://framagit.org/macgirvin/red",
+      protocols: ["activitypub", "zot"],
+    },
+    25 => %{
+      name: "Mobilizon",
+      slug: "mobilizon",
+      source: "https://framagit.org/framasoft/mobilizon"
+    },
+    26 => %{
+      name: "ActivityRelay",
+      slug: "activityrelay",
+      description: "A generic LitePub message relay",
+      source: "https://git.pleroma.social/pleroma/relay",
+    },
+    27 => %{
+      name: "PubGate",
+      slug: "pubgate",
+      source: "https://github.com/autogestion/pubgate"
+    },
+    28 => %{
+      name: "booth",
+      slug: "booth",
+      source: false
+    },
+    29 => %{
+      name: "zap",
+      slug: "zap",
+    }
+
   }
 
   @protocols %{
@@ -157,6 +256,10 @@ defmodule Fd.ServerName do
       name: "ActivityPub",
       logo: "https://static.fediverse.network/icons/activitypub.png",
     },
+    "zot" => %{
+      name: "ZOT",
+      logo: "https://static.fediverse.network/icons/zot.png"
+    }
   }
 
   for {id, name} <- @servers do
@@ -169,6 +272,8 @@ defmodule Fd.ServerName do
     def route_path(unquote(id)), do: "/" <> unquote(path)
     def route_path(unquote(name)), do: "/" <> unquote(path)
     def route_path(unquote(display_name)), do: "/" <> unquote(path)
+    def display_name(unquote(id)), do: unquote(display_name)
+    def display_name(unquote(name)), do: unquote(display_name)
     def from_int(unquote(id)), do: unquote(name)
     def to_int("/"<>unquote(path)), do: unquote(id)
     def to_int(unquote(name)), do: unquote(id)
@@ -191,6 +296,7 @@ defmodule Fd.ServerName do
   def route_path(0), do: "/" <> String.downcase(@default)
   def route_path("Other"), do: "/" <> String.downcase(@default)
 
+  def display_name(_), do: "Other"
 
   def list_names do
     Enum.map(@servers, fn({_, name}) -> name end) ++ [@default]
@@ -212,7 +318,7 @@ defmodule Fd.ServerName do
       |> Map.put(:path, to_path(id))
       |> Map.put_new(:hidden, false)
     end)
-    |> Enum.sort_by(fn(%{id: id}) -> get_in(stats, ["per_server", id, "instances", "total"])||0 end, &>=/2)
+    |> Enum.sort_by(fn(%{id: id}) -> get_in(stats, ["per_server", id, "instances", "up"])||0 end, &>=/2)
   end
 
 

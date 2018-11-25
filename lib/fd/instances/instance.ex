@@ -36,6 +36,7 @@ defmodule Fd.Instances.Instance do
     field :statusnet_version, :string
     field :statusnet_config, :map
     field :peertube_config, :map
+    field :nodeinfo, :map
 
     embeds_one :settings, Fd.Instances.InstanceSettings, on_replace: :delete
 
@@ -50,7 +51,7 @@ defmodule Fd.Instances.Instance do
     |> cast(attrs, [:domain, :up, :server, :name, :description, :email, :version, :valid, :last_checked_at, :last_up_at, :last_down_at, :has_mastapi,
       :has_statusnet, :mastapi_version, :mastapi_instance, :custom_emojis, :statusnet_version, :statusnet_config,
       :peertube_config, :signup, :users, :statuses, :peers, :emojis, :max_chars, :domain_suffix, :domain_base, :ases,
-      :ips, :monitor, :hidden, :dead])
+      :ips, :monitor, :hidden, :dead, :nodeinfo])
     |> validate_required([:domain])
     |> unique_constraint(:domain)
   end

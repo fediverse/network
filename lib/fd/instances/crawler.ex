@@ -108,7 +108,8 @@ defmodule Fd.Instances.Crawler do
     pipeline_stop = :erlang.monotonic_time
 
     changes = Map.get(state, :changes, %{})
-    |> Map.put("last_checked_at", DateTime.utc_now())
+              |> Map.put("last_checked_at", DateTime.utc_now())
+              |> Map.put("nodeinfo", state.nodeinfo)
 
     debug(state, "changes: #{inspect changes}")
 
@@ -355,7 +356,7 @@ defmodule Fd.Instances.Crawler do
     changes = %{"last_up_at" => DateTime.utc_now()}
 
     version = Map.get(crawler.pt_config, "serverVersion")
-    server = "PeerTube"
+    server = "peertube"
     signup = get_in(crawler.pt_config, ["signup", "allowed"])
     stats = crawler.pt_stats || %{}
     videos = Map.get(stats, "totalLocalVideos", 0)
@@ -485,6 +486,7 @@ defmodule Fd.Instances.Crawler do
     |> Map.put_new("signup", signup)
 
     changes = (crawler.changes || %{})
+    |> Map.put("nodeinfo", crawler.nodeinfo)
     |> Map.put("name", name)
     |> Map.put("description", description)
     |> Map.put("email", email)
@@ -507,16 +509,22 @@ defmodule Fd.Instances.Crawler do
   end
 
 
-  defp process_statusnet_version("Pleroma "<>version), do: {"Pleroma", version}
   defp process_statusnet_version("postactiv-"<>version), do: {"PostActiv", version}
+  defp process_statusnet_version("Pleroma "<>version), do: {"Pleroma", version}
   defp process_statusnet_version(version), do: {"GNUSocial", version}
 
 
   defp process_mastapi_version(nil), do: {"Unknown", nil}
   defp process_mastapi_version(string) do
-    cond do
+    {server, version} = cond do
       # "universal" compatible (pleroma-like) format: "masto_version; compatible ServerName real_version"
       # FIXME: it wont work if the server is not in Fd.ServerName
+      String.contains?(string, ":compatible:") ->
+        [_, server_and_version] = String.split(string, ":compatible:", parts: 2)
+        case String.split(server_and_version, [",", " ", ":"], parts: 2) do
+          [server, version] -> {server, clean_string(version)}
+          _ -> {nil, server_and_version}
+        end
       String.contains?(string, "compatible;") ->
         [_, server_and_version] = String.split(string, "(compatible; ")
         case String.split(server_and_version, " ", parts: 2) do
@@ -534,6 +542,7 @@ defmodule Fd.Instances.Crawler do
       true ->
         {"Mastodon", clean_string(string)}
     end
+    {downcase(server), version}
   end
 
   defp clean_string(string) do
@@ -835,6 +844,7 @@ defmodule Fd.Instances.Crawler do
       Map.put(headers, "Accept", accept)
     else headers end
     start = :erlang.monotonic_time
+    IO.puts "-- #{domain} #{path} #{inspect(headers)}"
     case HTTPoison.request(method, "https://#{domain}#{path}", body, headers, options) do
       {:ok, response = %HTTPoison.Response{status_code: 200, body: body}} ->
         Instrumenter.http_request(path, response, start)
@@ -855,7 +865,7 @@ defmodule Fd.Instances.Crawler do
         retry(crawler, path, options, {:ok, response}, retries)
       {:ok, response} ->
         Instrumenter.http_request(path, response, start)
-        info(crawler, "http ok")
+        info(crawler, "http ok - #{inspect response.status_code}")
         {:ok, response}
       {:error, error = %HTTPoison.Error{reason: reason}} when reason in [:timeout, :connect_timeout, :closed, :nxdomain] ->
         Instrumenter.http_request(path, error, start)
@@ -876,7 +886,7 @@ defmodule Fd.Instances.Crawler do
   end
 
   defp retry(crawler, path, options, error, retries) do
-    if retries > 5 do
+    if retries > 2 do
       error(crawler, "HTTP ERROR (max retries reached): #{inspect error}")
       error
     else
@@ -915,5 +925,7 @@ defmodule Fd.Instances.Crawler do
     Fd.Social.async_post(account, text)
   end
 
+  def downcase(nil), do: nil
+  def downcase(s), do: String.downcase(s)
 
 end

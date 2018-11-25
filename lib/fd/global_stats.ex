@@ -56,8 +56,11 @@ defmodule Fd.GlobalStats do
     # Instances per server: select server,count(id) from instances group by server;
     # Instances up: select count(id) from instances where up='true';
     # Statuses, users, emojis: select sum(users) as users, sum(statuses) as statuses, sum(emojis) as emojis from instances;
-    [total] = from(i in Instance, select: [count(i.id)]) |> Repo.one
+    [total] = from(i in Instance, select: [count(i.id)], where: not is_nil(i.last_up_at)) |> Repo.one
     [up] = from(i in Instance, select: [count(i.id)], where: i.up == true) |> Repo.one
+    [new] = from(i in Instance, select: [count(i.id)], where: i.up == true and fragment("? > NOW() - INTERVAL '7 days'", i.inserted_at)) |> Repo.one
+    [down] = from(i in Instance, select: [count(i.id)], where: i.up != true and fragment("? > NOW() - INTERVAL '30 days'", i.last_up_at)) |> Repo.one
+    [dead] = from(i in Instance, select: [count(i.id)], where: is_nil(i.last_up_at) or fragment("? < NOW() - INTERVAL '30 days'", i.last_up_at)) |> Repo.one
 
     per_server_all = from(i in Instance, select: [i.server, sum(i.users), sum(i.statuses), sum(i.emojis), count(i.id)], group_by: i.server)
     |> Repo.all
@@ -65,21 +68,35 @@ defmodule Fd.GlobalStats do
     per_server_up = from(i in Instance, select: [i.server,sum(i.users), sum(i.statuses), sum(i.emojis), count(i.id)], group_by: i.server, where: i.up == true)
     |> Repo.all
     |> Enum.reduce(%{}, &per_server_reducer/2)
+    per_server_down = from(i in Instance, select: [i.server,sum(i.users), sum(i.statuses), sum(i.emojis), count(i.id)], group_by: i.server, where: i.up == false and fragment("? > NOW() - INTERVAL '30 days'", i.last_up_at))
+    |> Repo.all
+    |> Enum.reduce(%{}, &per_server_reducer/2)
+    per_server_dead = from(i in Instance, select: [i.server,sum(i.users), sum(i.statuses), sum(i.emojis), count(i.id)], group_by: i.server, where: i.dead or fragment("? < NOW() - INTERVAL '30 days'", i.last_up_at))
+    |> Repo.all
+    |> Enum.reduce(%{}, &per_server_reducer/2)
 
-    [total, users, statuses, emojis] = from(i in Instance, select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
+    [_total, users, statuses, emojis] = from(i in Instance, select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
                                       |> Repo.one
                                       |> Enum.map(fn x -> if x == nil, do: 0, else: x end)
-    [up, up_users, up_statuses, up_emojis] = from(i in Instance, where: i.up == true, select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
+    [_up, up_users, up_statuses, up_emojis] = from(i in Instance, where: i.up == true, select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
+                                      |> Repo.one
+                                      |> Enum.map(fn x -> if x == nil, do: 0, else: x end)
+    [_down, down_users, down_statuses, down_emojis] = from(i in Instance, where: i.up == false and fragment("? > NOW() - INTERVAL '30 days'", i.last_up_at), select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
+                                      |> Repo.one
+                                      |> Enum.map(fn x -> if x == nil, do: 0, else: x end)
+    [_dead, dead_users, dead_statuses, dead_emojis] = from(i in Instance, where: i.dead or fragment("? < NOW() - INTERVAL '30 days'", i.last_up_at), select: [count(i.id), sum(i.users), sum(i.statuses), sum(i.emojis)])
                                       |> Repo.one
                                       |> Enum.map(fn x -> if x == nil, do: 0, else: x end)
 
     per_server = Enum.reduce(per_server_all, %{}, fn({server_id, x=[total, users, statuses, emojis]}, acc) ->
       [up, up_users, up_statuses, up_emojis] = Map.get(per_server_up, server_id, [0, 0, 0, 0])
+      [down, down_users, down_statuses, down_emojis] = Map.get(per_server_down, server_id, [0, 0, 0, 0])
+      [dead, dead_users, dead_statuses, dead_emojis] = Map.get(per_server_dead, server_id, [0, 0, 0, 0])
       data = %{
-        "instances" => %{"total" => total, "up" => up, "down" => total-up},
-        "users" => %{"total" => users, "up" => up_users, "down" => users-up_users},
-        "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => statuses-up_statuses},
-        "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => 0},
+        "instances" => %{"total" => total, "alive" => up + down, "up" => up, "down" => down, "dead" => dead},
+        "users" => %{"total" => users, "alive" => up_users + down_users, "up" => up_users, "down" => down_users, "dead" => dead_users},
+        "statuses" => %{"total" => statuses, "alive" => up_statuses + down_statuses, "up" => up_statuses, "down" => down_statuses, "dead" => dead_statuses},
+        "emojis" => %{"total" => emojis, "alive" => up_emojis + down_emojis, "up" => up_emojis, "down" => down_emojis, "dead" => dead_emojis},
       }
       Map.put(acc, server_id, data)
     end)
@@ -88,10 +105,10 @@ defmodule Fd.GlobalStats do
     Logger.info "up_users: #{inspect up_users}"
 
     %{
-      "instances" => %{"total" => total, "up" => up, "down" => total - up },
-      "users" => %{"total" => users, "up" => up_users, "down" => users - up_users},
-      "statuses" => %{"total" => statuses, "up" => up_statuses, "down" => statuses - up_statuses},
-      "emojis" => %{"total" => emojis, "up" => up_emojis, "down" => emojis - up_emojis},
+      "instances" => %{"total" => total, "alive" => up + down, "up" => up, "down" => down, "dead" => dead, "new" => new},
+      "users" => %{"total" => users, "alive" => up_users + down_users, "up" => up_users, "down" => down_users, "dead" => dead_users},
+      "statuses" => %{"total" => statuses, "alive" => up_statuses + down_statuses, "up" => up_statuses, "down" => down_statuses, "dead" => dead_statuses},
+      "emojis" => %{"total" => emojis, "alive" => up_emojis + down_emojis, "up" => up_emojis, "down" => down_emojis, "dead" => dead_emojis},
       "per_server" => per_server
     }
   end

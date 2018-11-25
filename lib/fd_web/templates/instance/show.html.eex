@@ -94,18 +94,27 @@
               <span class="value"><%= @instance.version %></span>
             </li>
           <% end %>
-          <!--<%= if !Enum.empty?(supported_protocols(@instance)) do %>
+          <%= if !Enum.empty?(supported_protocols(@instance)) do %>
             <li>
               <span class="label">Protocols</span>
               <span class="value"><%= supported_protocols_list(@instance) %></span>
             </li>
-          <% end %>-->
+          <% end %>
+          <% features = get_in(@instance.nodeinfo, ["metadata", "features"]) %>
+          <%= if features && !Enum.empty?(features) do %>
+            <li>
+              <span class="label">Features</span>
+              <span class="value"><%= features |> Enum.filter(fn(f) -> f end) |> Enum.join(", ") %>
+            </li>
+          <% end %>
         </ul>
-      </li>
+        <br />
+        <%= FdWeb.InstanceFederationView.overview(@conn, @instance) %>
+        <br />
       <li>Found <%= format_date(@instance.inserted_at) %></li>
     </ul>
   </div>
-  <!--<div class="col-sm">
+  <div class="col-sm">
     <ul class="infolist">
       <li>
         <span class="label">Host</span>
@@ -118,14 +127,14 @@
             </span>
           </li>
           <% end %>
-          <li>
+          <!--<li>
             <span class="label">IPs</span>
             <span class="value"><a href="#">8.8.8.8</a>, <a href="#">2001::beef:dead:beef</a></span>
           </li>
           <li>
             <span class="label">Network</span>
             <span class="value"><a href="#">Online S.A.S</a>, <a href="#">Hetzner DE</a></span>
-          </li>
+          </li>-->
           <%= if @instance.domain_suffix do %>
             <li>
               <span class="label">TLD</span>
@@ -137,7 +146,7 @@
         </ul>
       </li>
     </ul>
-  </div>-->
+  </div>
 </div>
 
 <%= if @instance.statuses || @instance.users do %>

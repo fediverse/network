@@ -69,6 +69,14 @@
           </small>
         </label>
       </div>
+      <div class="form-group">
+        <label>Federation restrictions link</label>
+        <%= text_input s, :federation_restrictions_link, class: "form-control" %>
+        <p class="text-muted mb-0">
+          If your server is not disclosing the federation restrictions by itself, you can add here a link to the list/information page which discloses it.
+        </p>
+        <div class=""><%= error_tag s, :federation_restrictions_link %></div>
+      </div>
     <% end %>
   <% else %>
     <%= inputs_for f, :settings, fn s -> %>

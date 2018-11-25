@@ -1,0 +1,14 @@
+<%= FdWeb.InstanceView.render "_header.html", conn: @conn, instance: @instance %>
+
+<h3>Federation restrictions</h3>
+
+<p>
+  <%= if link = Map.get(@instance.settings, :federation_restrictions_link) do %>
+    This instance is manually disclosing its federation restrictions at <%= link(link, to: link) %>.
+  <% else %>
+    This instance's server do not disclose the federation restrictions.
+    <br />
+    <br />
+    Instance administrator may have listed somewhere the restrictions they apply.
+  <% end %>
+</p>

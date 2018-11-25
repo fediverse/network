@@ -8,9 +8,12 @@
         <%= display_stat(@stats,:mini, ["instances", "up"]) %></li>
       <li><%= link "Down", to: instance_down_path(@conn, :index), class: active_class_bool(@filters["up"] == "false") %> 
         <%= display_stat(@stats,:mini, ["instances", "down"]) %></li>
-      <li><%= link "Newest", to: instance_newest_path(@conn, :index), class: active_class_bool(@filters["age"] == "newest") %></li>
+      <li><%= link "Newest", to: instance_newest_path(@conn, :index), class: active_class_bool(@filters["age"] == "newest") %>
+        <%= display_stat(@stats,:mini, ["instances", "new"]) %></li>
+      <li><%= link "Closed", to: instance_closed_path(@conn, :index), class: active_class_bool(@filters["closed"] == "true") %>
+        <%= display_stat(@stats,:mini, ["instances", "dead"]) %></li>
       <li><%= link "All", to: instance_all_path(@conn, :index), class: active_class_bool(@filters["up"] == "all" or @filters["up"]==nil) %>
-        <%= display_stat(@stats,:mini, ["instances", "total"]) %></li>
+        <%= display_stat(@stats,:mini, ["instances", "alive"]) %></li>
     </ul>
   <li class="filter">
     <strong>Servers</strong>
@@ -18,7 +21,7 @@
       <li><%= link "All", to: instance_path(@conn, :index), class: active_class_bool(@filters["server"] == "all" or @filters["server"] == "known") %></li>
       <%= for server = %{hidden: false} <- Fd.ServerName.list() do %>
         <li><%= link server.name, to: instance_server_path(@conn, :index, server.path), class: active_class_bool(@filters["server"]==server.path) %> 
-          <%= display_stats(@stats,:mini, ["per_server", server.id, "instances"], ["up", "total"]) %></li>
+          <%= display_stats(@stats,:mini, ["per_server", server.id, "instances"], ["up", "alive"]) %></li>
       <% end %>
     </ul>
   </li>

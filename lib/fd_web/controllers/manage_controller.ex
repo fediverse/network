@@ -42,6 +42,10 @@ defmodule FdWeb.ManageController do
         else
           redirect(conn, to: manage_path(conn, :show, instance))
         end
+      {:error, changeset} ->
+        conn
+        |> assign(:title, "Manage #{Fd.Util.idna(instance.domain)}")
+        |> render("index.html", instance: instance, changeset: changeset, admin: admin?)
     end
   end
 

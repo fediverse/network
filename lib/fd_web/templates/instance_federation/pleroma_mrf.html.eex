@@ -1,0 +1,39 @@
+<%= FdWeb.InstanceView.render "_header.html", conn: @conn, instance: @instance %>
+
+<h3>Federation restrictions</h3>
+
+<p>
+  <% quarantine = Map.get(@federation, "quarantined_instances") %>
+  <%= if quarantine && !Enum.empty?(quarantine) do %>
+    <strong>Quarantined instances:</strong>
+    <%= Enum.map(quarantine, fn(i) -> link(i, to: instance_path(@conn, :show, i)) end) |> Enum.intersperse(",")%>
+  <% else %>
+    No quarantined instances.
+  <% end %>
+
+  <br />
+
+  <%= if Enum.empty?(@policies) do %>
+    <br />
+    No MRF policies enabled.
+  <% else %>
+    <br />
+    <strong>Enabled MRF policies:</strong> <%= Enum.join(@policies, ",") %>
+  <% end %>
+
+  <%= if Enum.member?(@policies, "SimplePolicy") do %>
+    <br /><br />
+    <strong>SimplePolicy rules:</strong><br />
+    <ul>
+      <%= for {type, instances} <- Map.get(@federation, "mrf_simple") do %>
+        <li><strong><%= type %></strong>: <%= Enum.map(instances, fn(i) -> link(i, to: instance_path(@conn, :show, i)) end) |> Enum.intersperse([raw(", ")]) %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</p>
+
+<p>
+  <small>
+    Not all policies may be disclosed by the server.
+  </small>
+</p>

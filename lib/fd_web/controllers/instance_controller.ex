@@ -40,6 +40,13 @@ defmodule FdWeb.InstanceController do
     |> render("index.html", stats: stats, instances: instances, title: "Newest Instances", filters: filters)
   end
 
+  def index(conn = %{request_path: "/closed"}, params) do
+    {instances, filters, stats} = basic_filter(conn, Map.merge(params, %{"up" => "all", "closed" => "true"}))
+    conn
+    |> assign(:title, "Closed Instances")
+    |> render("index.html", stats: stats, instances: instances, title: "Closed Instances", filters: filters)
+  end
+
   def tld(conn, _) do
     stats = Fd.HostStats.get()
     conn
@@ -57,12 +64,13 @@ defmodule FdWeb.InstanceController do
 
   for s <- Fd.ServerName.list_names() do
     path = Fd.ServerName.route_path(s)
+    display_name = Fd.ServerName.display_name(s)
     def index(conn = %{request_path: unquote(path)}, params) do
       params = Map.put(params, "server", unquote(path))
       {instances, filters, stats} = basic_filter(conn, params)
       conn
-      |> assign(:title, unquote(s))
-      |> render("index.html", stats: stats, instances: instances, title: "#{unquote(s)} Instances", filters: filters)
+      |> assign(:title, unquote(display_name))
+      |> render("index.html", stats: stats, instances: instances, title: "#{unquote(display_name)} Instances", filters: filters)
     end
   end
 
@@ -87,6 +95,16 @@ defmodule FdWeb.InstanceController do
     end
   end
 
+  def federation(conn, params = %{"instance_id" => id}) do
+    instance = Instances.get_instance_by_domain!(id)
+    conn
+    |> assign(:title, "#{Fd.Util.idna(instance.domain)} Federation Restrictions")
+    |> assign(:private, instance.hidden)
+    |> assign(:section, "federation")
+    |> render(FdWeb.InstanceFederationView, "show.html", instance: instance)
+  end
+
+
   def show(conn, params = %{"id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
     iid           = instance.id
@@ -108,7 +126,7 @@ defmodule FdWeb.InstanceController do
 
   def stats(conn, params = %{"instance_id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
-    stats         = Fd.Cache.lazy("web:i:#{instance.id}:stats", &get_instance_stats/2, [instance, params])
+    stats         = Fd.Cache.lazy("web:i:#{instance.id}:stats:#{conn.query_string}", &get_instance_stats/2, [instance, params])
 
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} statistics")
@@ -128,9 +146,9 @@ defmodule FdWeb.InstanceController do
     |> render("checks.html", instance: instance, checks: checks)
   end
 
-  @allowed_filters ["up", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers", "max_chars"]
+  @allowed_filters ["up", "closed", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers", "max_chars"]
   defp basic_filter(conn,params) do
-    Fd.Cache.lazy("list:#{conn.request_path}", &run_basic_filter/1, [params])
+    Fd.Cache.lazy("list:#{conn.request_path}?#{conn.query_string}", &run_basic_filter/1, [params])
   end
   defp run_basic_filter(params) do
     filters = params
@@ -145,6 +163,7 @@ defmodule FdWeb.InstanceController do
     |> Enum.into(Map.new)
     |> Map.put_new("up", "true")
     |> Map.put_new("server", "known")
+    |> IO.inspect
     instances = Enum.reduce(filters, from(i in Instance), &basic_filter_reduce/2)
     |> select([q], %Instance{id: q.id, domain: q.domain, up: q.up, server: q.server, statuses: q.statuses, users: q.users,
       peers: q.peers, emojis: q.emojis, hidden: q.hidden, signup: q.signup, dead: q.dead, version: q.version,
@@ -155,8 +174,7 @@ defmodule FdWeb.InstanceController do
   end
 
   def get_instance_stats(instance, params) do
-    default_interval = if instance.monitor, do: "hourly", else: "3hour"
-    interval      = Map.get(params, "interval", default_interval)
+    interval      = Map.get(params, "interval", "hourly")
     {stats, ttl}         = Instances.get_instance_statistics(instance.id, interval)
     get_serie = fn(stats, key) ->
       Enum.map(stats, fn(stat) -> Map.get(stat, key, 0)||0 end)
@@ -198,6 +216,14 @@ defmodule FdWeb.InstanceController do
   end
   defp basic_filter_reduce({"up", "false"}, query) do
     where(query, [i], i.up != true)
+  end
+  defp basic_filter_reduce({"up", "all"}, query) do
+    query
+  end
+
+  defp basic_filter_reduce({"closed", "true"}, query) do
+    where(query, [i], i.dead or fragment("? < NOW() - INTERVAL '30 days'", i.last_up_at))
+    |> order_by([i], [desc: i.last_up_at])
   end
 
   defp basic_filter_reduce({"server", "all"}, query) do

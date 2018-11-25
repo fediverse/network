@@ -26,12 +26,14 @@ defmodule FdWeb.Router do
     # Define /pleroma, /mastodon, …
     for s <- Fd.ServerName.list_names do
       get Fd.ServerName.route_path(s), InstanceController, :index, as: :instance_sserver
+      get Fd.ServerName.route_path(s) <> "/versions", ServerController, as: :server_sversions
     end
 
     get "/all", InstanceController, :index, as: :instance_all
     get "/down", InstanceController, :index, as: :instance_down
     get "/newest", InstanceController, :index, as: :instance_newest
     get "/oldest", InstanceController, :index, as: :instance_oldest
+    get "/closed", InstanceController, :index, as: :instance_closed
     get "/checks", CheckController, :index, as: :latest_checks
     get "/tld", InstanceController, :tld, as: :instance
     get "/tld/:tld", InstanceController, :index, as: :instance_tld
@@ -51,6 +53,7 @@ defmodule FdWeb.Router do
       get "/stats/:interval", InstanceController, :stats
       get "/emojis", InstanceController, :emojis
       get "/peers", InstanceController, :peers
+      get "/federation", InstanceController, :federation
       get "/checks", InstanceController, :checks
       get "/checks/:from_time", CheckController, :show, as: :check
       get "/checks/:from_time/:to_time", CheckController, :show, as: :check
@@ -62,6 +65,7 @@ defmodule FdWeb.Router do
     # This route will mostly never be directly hit (eaten by instance /:id) but this is for route helpers
     # Real routes are generated per-server by Fd.ServerName.list_names a couple of lines before
     get "/:server", InstanceController, :index, as: :instance_server
+    get "/:server/versions", ServerController, :versions, as: :server_versions
   end
 
   if Mix.env == :dev do

@@ -225,7 +225,7 @@ defmodule Fd.Instances do
     GROUP BY date
     """
 
-    res = Ecto.Adapters.SQL.query!(Repo, query)
+    res = Ecto.Adapters.SQL.query!(Repo, query, [], timeout: 150_000)
     get_date = fn(map) ->
       {date, {h, m, s, ms}} = Map.get(map, "date")
       hour = {h, m, s}
