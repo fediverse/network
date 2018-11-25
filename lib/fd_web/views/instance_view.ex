@@ -93,13 +93,12 @@ defmodule FdWeb.InstanceView do
   def display_stats(stats, format, key, keys) do
     value = get_in(stats, key)
     if value do
-      stats = for skey <- keys do
-        if val = Map.get(value, skey) do
-          format_stat(:inline, [key, skey], val)
-        end
-      end
-      |> Enum.filter(fn(x) -> x end)
-      |> Enum.intersperse(" - ")
+      stats = keys
+              |> Enum.map(fn(sub_key) -> {[key, sub_key], Map.get(value, sub_key)} end)
+              |> Enum.filter(fn({_, value}) -> value end)
+              |> Enum.uniq_by(fn({_, value}) -> value end)
+              |> Enum.map(fn({keys, value}) -> format_stat(:inline, keys, value) end)
+              |> Enum.intersperse("/")
       if format == :mini do
         ["(", stats, ")"]
       else

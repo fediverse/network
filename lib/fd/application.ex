@@ -25,6 +25,7 @@ defmodule Fd.Application do
     opts = [strategy: :one_for_one, name: Fd.Supervisor]
     case Supervisor.start_link(children, opts) do
       ok = {:ok, sup} ->
+        Fd.Pleroma.ensure_general_accounts()
         if Application.get_env(:fd, :instances)[:autostart], do: spawn(fn -> run_instances() end)
         ok
       err -> err
@@ -50,9 +51,8 @@ defmodule Fd.Application do
     unknown_instance_ids = from(i in Instance, select: i.id, where: ((is_nil(i.server) or i.server == 0)) and (is_nil(i.monitor) or i.monitor == false), order_by: [asc: i.last_checked_at])
     |> Repo.all
     for instance_id <- mon_instance_ids ++ instance_ids ++ unknown_instance_ids do
-      IO.puts "-- starting instance #{instance_id}"
       Fd.Instances.ServerSupervisor.start_child(instance_id)
-      :timer.sleep(:crypto.rand_uniform(150, 500))
+      :timer.sleep(:crypto.rand_uniform(10, 50))
     end
   end
 

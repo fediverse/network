@@ -50,12 +50,12 @@
           &nbsp;
           <br />
           <br />
-          <small><strong>Follow fediverse.network on the fediverse:</strong><br/>
-          <a href="https://pleroma.fr/users/fediversenetwork">News/Info (@fediversenetwork@pleroma.fr)</a>
-          &nbsp;-&nbsp;
-          <a href="https://pleroma.fr/users/fediverse">Watch (new instances, upgrades, …) (@fediverse@pleroma.fr)</a>
-          &nbsp;-&nbsp;
-          <a href="https://pleroma.fr/users/fediversemonitoring">Monitoring (up/down) (@fediversemonitoring@pleroma.fr)</a>
+          <strong>Follow on the fediverse:</strong><br/>
+          <strong>@watch@fediverse.network</strong> <i>(new instances, upgrades, …)</i>
+            &nbsp;-&nbsp;
+            @monitoring@fediverse.network <i>(watch + up/down)</i>
+            &nbsp;-&nbsp;
+            <a href="https://write.random.sh/fediversenetwork/">@fediversenetwork@write.random.sh</a> <i>(changelog)</i>
           </small>
           </p>
       </footer>

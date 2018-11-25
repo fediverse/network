@@ -6,8 +6,11 @@
     <%= text_input f, :domain, class: "form-control" %>
   </div>
   <div class="form-group">
-    <%= label f, :email, "Email address (the contact address listed in your instance)" %>
+    <%= label f, :email, "Admin email address" %>
     <%= text_input f, :email, class: "form-control" %>
+    <p class="text-muted">
+      This must match the administrative e-mail setup in your instance and does not work with all servers!
+    </p>
   </div>
   <%= submit "Login", class: "btn btn-default" %>
 <% end %>

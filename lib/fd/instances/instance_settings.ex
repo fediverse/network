@@ -9,13 +9,14 @@ defmodule Fd.Instances.InstanceSettings do
     field :dead_reason, :string
     field :alerts_to_contact, :boolean
     field :maintenance_mode, :boolean
+    field :fedibot, :boolean
 
     field :federation_restrictions_link, :string
   end
 
   def changeset(settings = %InstanceSettings{}, attrs) do
     settings
-    |> cast(attrs, [:hidden, :alerts_to_contact, :keep_calm, :dead_reason, :maintenance_mode, :federation_restrictions_link])
+    |> cast(attrs, [:hidden, :alerts_to_contact, :keep_calm, :dead_reason, :maintenance_mode, :federation_restrictions_link, :fedibot])
     |> validate_change(:federation_restrictions_link, fn(_, link) ->
       case URI.parse(link) do
         %URI{scheme: scheme, host: host} when scheme in ["http", "https"] and is_binary(host) -> []

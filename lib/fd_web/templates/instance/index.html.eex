@@ -20,8 +20,10 @@
     <ul class="list">
       <li><%= link "All", to: instance_path(@conn, :index), class: active_class_bool(@filters["server"] == "all" or @filters["server"] == "known") %></li>
       <%= for server = %{hidden: false} <- Fd.ServerName.list() do %>
-        <li><%= link server.name, to: instance_server_path(@conn, :index, server.path), class: active_class_bool(@filters["server"]==server.path) %> 
-          <%= display_stats(@stats,:mini, ["per_server", server.id, "instances"], ["up", "alive"]) %></li>
+        <%= unless (get_in(@stats, ["per_server", server.id, "instances", "up"])||0) == 0 do %>
+          <li><%= link server.name, to: instance_server_path(@conn, :index, server.path), class: active_class_bool(@filters["server"]==server.path) %> 
+            <%= display_stats(@stats,:mini, ["per_server", server.id, "instances"], ["up", "alive"]) %></li>
+        <% end %>
       <% end %>
     </ul>
   </li>

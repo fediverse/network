@@ -28,11 +28,11 @@ defmodule Fd.DownEmail do
 
     The reason seems to be: #{Map.get(check, "error_s", "unknown")}
 
-    We're still fixing some bugs -- if this alert was a false positive, sorry about that! Do not hesitate to report it to us.
+    We're still fixing some bugs -- if this alert was a false positive, sorry about that! Do not hesitate to report it to @href@pleroma.fr.
 
     ---
     This e-mail was sent by https://fediverse.network/monitoring
-    To unsubscribe, please go to https://fediverse.network/manage and disable the monitoring feature.
+    To unsubscribe, please go to https://fediverse.network/manage
     """
   end
 
@@ -44,11 +44,11 @@ defmodule Fd.DownEmail do
     <br/><br/>
     The reason seems to be: <strong>#{Map.get(check, "error_s", "unknown")}</strong>.
     <br/><br/>
-    We're still fixing some bugs -- if this alert was a false positive, sorry about that! Do not hesitate to report it to us.
+    We're still fixing some bugs -- if this alert was a false positive, sorry about that! Do not hesitate to report it to @href@pleroma.fr.
     <br/><br/>
     ---<br/>
     This e-mail was sent by <a href="https://fediverse.network/monitoring">fediverse.network monitoring</a>.<br/>
-    To unsubscribe, please <a href="https://fediverse.network/manage">log-in to manage your instance</a> and disable the monitoring feature.<br/>
+    To unsubscribe, please <a href="https://fediverse.network/manage">log-in to manage your instance</a>.
     """
   end
 

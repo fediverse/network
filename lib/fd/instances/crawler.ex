@@ -23,11 +23,11 @@ defmodule Fd.Instances.Crawler do
   alias Fd.Instances.{Instance, InstanceCheck, Instrumenter}
 
   @hackney_pool :hackney_crawler
-  @hackney_pool_opts [{:timeout, 150_000}, {:max_connections, 200}, {:connect_timeout, 150_000}]
+  @hackney_pool_opts [{:timeout, 150_000}, {:max_connections, 500}, {:connect_timeout, 300_000}]
   @hackney_mon_pool :hackney_crawler_mon
-  @hackney_mon_pool_opts [{:timeout, 150_000}, {:max_connections, 50}, {:connect_timeout, 150_000}]
-  @hackney_opts [{:pool, @hackney_pool}]
-  @hackney_mon_opts [{:pool, @hackney_pool}]
+  @hackney_mon_pool_opts [{:timeout, 150_000}, {:max_connections, 100}, {:connect_timeout, 300_000}]
+  @hackney_opts [{:connect_timeout, 50_000}, {:recv_timeout, 50_000}, {:pool, @hackney_pool}]
+  @hackney_mon_opt [{:pool, @hackney_pool}]
 
   @down_http_codes [301, 410, 502, 503, 504, 505, 520, 521, 522, 523, 524, 525, 526, 527, 530]
   @retry_http_codes [500, 502, 503, 504, 505, 520, 521, 522, 523, 524]
@@ -100,7 +100,6 @@ defmodule Fd.Instances.Crawler do
     |> process_results()
     |> put_public_suffix()
     |> put_host_info()
-    |> check_for_changes()
 
     # TODO: If every check is false (and not halted), decide it's NOT a fediverse instance.
     # FIXME: Check for AP/OStatus endpoint as last resort before deciding it's not a fediverse instance.
@@ -117,18 +116,10 @@ defmodule Fd.Instances.Crawler do
     check_changeset = InstanceCheck.changeset(%InstanceCheck{instance_id: instance.id}, check)
     Fd.Repo.insert!(check_changeset)
 
-    case Instances.update_instance(instance, changes) do
+    state = case Instances.update_instance(instance, changes) do
       {:ok, instance} ->
-        info(state, "OK -- updated!")
-      error ->
-        error(state, "FAIL: #{inspect error}")
-    end
 
-    finished = :erlang.monotonic_time
-    pipeline_duration = pipeline_stop - start
-    total_duration = finished - start
-
-    info(state, "finished in #{:erlang.convert_time_unit(total_duration, :native, :millisecond)}ms (pipeline took #{:erlang.convert_time_unit(pipeline_duration, :native, :millisecond)} ms)!")
+        state = check_for_changes(state)
 
     if Application.get_env(:fd, :monitoring_alerts, false) && state.instance.monitor && state.instance.settings && state.instance.settings.alerts_to_contact do
       spawn(fn() ->
@@ -144,6 +135,19 @@ defmodule Fd.Instances.Crawler do
         end
       end)
     end
+
+        info(state, "OK -- updated!")
+        state
+      error ->
+        error(state, "FAIL: #{inspect error}")
+        state
+    end
+
+    finished = :erlang.monotonic_time
+    pipeline_duration = pipeline_stop - start
+    total_duration = finished - start
+
+    info(state, "finished in #{:erlang.convert_time_unit(total_duration, :native, :millisecond)}ms (pipeline took #{:erlang.convert_time_unit(pipeline_duration, :native, :millisecond)} ms)!")
 
     spawn(fn() ->
       domains = state.m_peers || []
@@ -218,7 +222,7 @@ defmodule Fd.Instances.Crawler do
     else false end
 
     diffs = %{new: new?, became_up: became_up?, became_down: became_down?, version_changed: version_changed?,
-      server_changed: server_changed?}
+      server_changed: server_changed?, is_up?: is_up?, was_up?: was_up?}
 
     {became_open?, became_closed?} = cond do
       signup_changed? && Map.get(crawler.changes, "signup", true) == false ->
@@ -229,36 +233,41 @@ defmodule Fd.Instances.Crawler do
         {false, false}
     end
 
-    unless (crawler.instance.hidden || false) or Map.get(crawler.changes, "server", 0) == 0 do
+    IO.puts Map.get(crawler.changes, "server")
+    unless (crawler.instance.hidden || false) or Map.get(crawler.changes, "server") == 0 do
       if became_up? do
-        post("is back up :)", crawler.instance, "fediversemonitoring@pleroma.fr")
+        post("{instance} is back up :)", crawler.instance, [:mon])
       end
       if became_down? do
+        IO.puts "BECAME DOWN"
         error = if error = Map.get(crawler.check, "error_s") do
           " (#{error})"
         else
           ""
         end
-        if crawler.instance.settings.maintenance_mode? do
-          post("is undergoing planned maintenance#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
+        if Map.get(crawler.instance.settings || %{}, :maintenance_mode) do
+          post("{instance} is undergoing planned maintenance#{error}", crawler.instance, [:mon])
         else
-          post("is down#{error}", crawler.instance, "fediversemonitoring@pleroma.fr")
+          post("{instance} is down#{error}", crawler.instance, [:mon])
         end
       end
       if became_closed? do
-        post("closed registrations", crawler.instance)
-        post("closed registrations", crawler.instance, "fediversemonitoring@pleroma.fr")
+        post("{instance} closed registrations", crawler.instance, [:watch, :mon])
       end
       if became_open? do
-        post("opened registrations", crawler.instance)
-        post("opened registrations", crawler.instance, "fediversemonitoring@pleroma.fr")
+        post("{instance} opened registrations", crawler.instance, [:watch, :mon])
       end
       if new? do
         server_id = Map.get(crawler.changes, "server", 0)
         unless server_id == 0 do
           server = server_id |> Fd.ServerName.from_int()
-          post("welcome to the fediverse! a new #{server} instance! \o/", crawler.instance)
-          post("welcome to the fediverse! a new #{server} instance! \o/", crawler.instance, "fediversemonitoring@pleroma.fr")
+          [
+            "{instance}, welcome to the fediverse! a new {server} instance! \\o/",
+            "\\o/ please welcome {instance} to the fediverse, a new {server} instance",
+            "one more {server} instance in the fediverse! welcome, {instance}!"
+          ]
+          |> Enum.random()
+          |> post(crawler.instance, [:new, :watch, :mon], %{server: server})
         end
       end
       cond do
@@ -267,15 +276,13 @@ defmodule Fd.Instances.Crawler do
           unless last == 0 do
             old_server = last_up_check.server |> Fd.ServerName.from_int()
             new_server = Map.get(crawler.changes, "server", 0) |> Fd.ServerName.from_int()
-            post("changed servers from #{old_server} to #{new_server}", crawler.instance)
-            post("changed servers from #{old_server} to #{new_server}", crawler.instance, "fediversemonitoring@pleroma.fr")
+            post("{instance} changed servers from #{old_server} to #{new_server}", crawler.instance, [:watch, :mon])
           end
         version_changed? ->
           server = Map.get(crawler.changes, "server", 0) |> Fd.ServerName.from_int()
           old_version = last_up_check.version
           new_version = Map.get(crawler.changes, "version", "?")
-          post("upgraded #{server} from #{old_version} to #{new_version}:", crawler.instance)
-          post("upgraded #{server} from #{old_version} to #{new_version}:", crawler.instance, "fediversemonitoring@pleroma.fr")
+          post("{instance} upgraded #{server} from #{old_version} to #{new_version}:", crawler.instance, [:watch, :mon])
         true -> :nothing_changed
       end
     end
@@ -514,8 +521,7 @@ defmodule Fd.Instances.Crawler do
   defp process_statusnet_version(version), do: {"GNUSocial", version}
 
 
-  defp process_mastapi_version(nil), do: {"Unknown", nil}
-  defp process_mastapi_version(string) do
+  defp process_mastapi_version(string) when is_binary(string) do
     {server, version} = cond do
       # "universal" compatible (pleroma-like) format: "masto_version; compatible ServerName real_version"
       # FIXME: it wont work if the server is not in Fd.ServerName
@@ -544,6 +550,7 @@ defmodule Fd.Instances.Crawler do
     end
     {downcase(server), version}
   end
+  defp process_mastapi_version(_), do: {"Unknown", nil}
 
   defp clean_string(string) do
     string
@@ -867,7 +874,7 @@ defmodule Fd.Instances.Crawler do
         Instrumenter.http_request(path, response, start)
         info(crawler, "http ok - #{inspect response.status_code}")
         {:ok, response}
-      {:error, error = %HTTPoison.Error{reason: reason}} when reason in [:timeout, :connect_timeout, :closed, :nxdomain] ->
+      {:error, error = %HTTPoison.Error{reason: reason}} when reason in [:timeout, :connect_timeout, :closed, :nxdomain, :ehostunreach] ->
         Instrumenter.http_request(path, error, start)
         retry(crawler, path, options, {:error, error}, retries)
         #if retries > 4  do
@@ -886,12 +893,12 @@ defmodule Fd.Instances.Crawler do
   end
 
   defp retry(crawler, path, options, error, retries) do
-    if retries > 2 do
+    if retries > 5 do
       error(crawler, "HTTP ERROR (max retries reached): #{inspect error}")
       error
     else
       debug(crawler, "HTTP retry #{inspect retries}: #{inspect error}")
-      :timer.sleep(:crypto.rand_uniform(retries*2000, retries*3000))
+      :timer.sleep(:crypto.rand_uniform(retries*2000, retries*5000))
       Instrumenter.retry_http_request()
       request(crawler, path, options, retries + 1)
     end
@@ -910,19 +917,41 @@ defmodule Fd.Instances.Crawler do
     Logger.error "Crawler(#{inspect self()} ##{crawler.instance.id} #{domain}): #{message}"
   end
 
-  defp post(text, instance) do
-    post(text, instance, "fediverse@pleroma.fr")
-  end
-  defp post(text, instance, account) do
-    text = if instance.hidden do
-      ["private instance", text]
+  defp post(text, instance, accounts, replaces \\ %{}) do
+    Logger.warn inspect(instance.settings)
+    [post_acct | repeat_accts] = if Map.get(instance.settings || %{}, :fedibot) do
+      [instance.domain] ++ accounts
     else
-      [Fd.Util.idna(instance.domain), text, "— https://fediverse.network/#{Fd.Util.idna(instance.domain)}"]
+      accounts
     end
-    text = text
-    |> Enum.join(" ")
 
-    Fd.Social.async_post(account, text)
+    {instance_domain, link} = if instance.hidden do
+      {"[private]", nil}
+    else
+      {Fd.Util.idna(instance.domain), "https://fediverse.network/#{Fd.Util.idna(instance.domain)}"}
+    end
+
+    text = text
+    |> String.replace("{instance}", instance_domain)
+    |> (fn(text) ->
+      Enum.reduce(replaces, text, fn({replace, with_text}, text) ->
+        String.replace(text, "{#{replace}}", with_text)
+      end)
+    end).()
+    |> (fn(text) ->
+      [text, link]
+    end).()
+    |> Enum.filter(&(&1))
+    |> Enum.join(" - ")
+
+    case Fd.Pleroma.post(post_acct, text) do
+      {:ok, activity} ->
+        Fd.Pleroma.repeat(activity.id, repeat_accts)
+        {:ok, activity}
+      {:error, error} ->
+        Logger.error "Failed to post status: #{inspect error}"
+        {:error, error}
+    end
   end
 
   def downcase(nil), do: nil

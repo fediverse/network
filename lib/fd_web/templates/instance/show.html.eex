@@ -111,7 +111,10 @@
         <br />
         <%= FdWeb.InstanceFederationView.overview(@conn, @instance) %>
         <br />
-      <li>Found <%= format_date(@instance.inserted_at) %></li>
+        <li>Found <%= format_date(@instance.inserted_at) %></li>
+        <%= if Map.get(@instance.settings || %{}, :fedibot) do %>
+          <li>Follow changes at <code>@<%= Fd.Pleroma.sanitize_nick(@instance.domain) %>@fediverse.network</code></li>
+        <% end %>
     </ul>
   </div>
   <div class="col-sm">

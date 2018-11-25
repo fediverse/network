@@ -22,8 +22,14 @@ defmodule Fd.Instances.Server do
   def init([id]) do
     Logger.debug "starting instance #{inspect id}"
     instance = Instances.get_instance!(id)
-    {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {0, 8}
-    delay = (:crypto.rand_uniform(min_delay, max_delay) * 60) * 1000
+    delay = if instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.last_up_at) >= 2678400 do
+      Logger.info "instance #{instance.domain} dead, waiting"
+      {delay, _} = get_delay(instance)
+      round(delay / 2)
+    else
+      {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {0, 8}
+      (:crypto.rand_uniform(min_delay, max_delay) * 60) * 1000
+    end
     {:ok, timer} = :timer.send_after(delay, self(), :crawl)
     {:ok, %__MODULE__{id: id, instance: instance, timer: timer}}
   end
@@ -32,6 +38,7 @@ defmodule Fd.Instances.Server do
   def handle_info(:crawl, state = %__MODULE__{id: id}) do
     if state.timer, do: :timer.cancel(state.timer)
     instance = Instances.get_instance!(id)
+    if Map.get(instance.settings || %{}, :fedibot), do: {:ok, _} = Fd.Pleroma.create_or_get_user(instance.domain, instance.domain, "https://fediverse.network/#{instance.domain}")
     if @dev do
       Fd.Instances.Crawler.run(instance)
     else
@@ -71,6 +78,7 @@ defmodule Fd.Instances.Server do
       instance.dead -> :instance_dead
       instance.settings && instance.monitor && instance.settings.keep_calm -> :instance_monitor_calm
       instance.monitor -> :instance_monitor
+      instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.last_up_at) >= 2678400 -> :instance_dead
       instance.settings && instance.settings.keep_calm -> :instance_calm
       instance.server == 0 -> :instance_calm
       true -> :instance_default

@@ -23,12 +23,6 @@
         Enabled advanced monitoring
         <p class="text-muted mb-0">
           More precise uptime and statistics. <a href="/monitoring">Learn more</a>.
-          <%= if @instance.monitor do %>
-            <br />
-            <small>
-              This service is totally free but <a href="https://liberapay.com/href">please consider supporting</a> the hosting fees on Liberapay. :)
-            </small>
-          <% end %>
         </p>
       </label>
     </div>
@@ -66,6 +60,16 @@
           <br>
           <small class="text-muted">
             Warning: this setting may override your instance API (<a href="/info#private">more info</a>).
+          </small>
+        </label>
+      </div>
+      <div class="form-group">
+        <label>
+          <%= checkbox s, :fedibot %>
+          Enable instance fediverse bot
+          <br>
+          <small class="text-muted">
+            Changes related to this instance will be posted to the fediverse at <code>@<%= Fd.Pleroma.sanitize_nick(@instance.domain) %>@fediverse.network</code>.
           </small>
         </label>
       </div>

@@ -34,7 +34,7 @@ defmodule Fd.Mixfile do
   defp deps do
     [
       {:phoenix, "~> 1.3.0"},
-      {:phoenix_pubsub, "~> 1.0"},
+      {:phoenix_pubsub, "~> 1.0", override: true},
       {:phoenix_ecto, "~> 3.2"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
@@ -58,8 +58,10 @@ defmodule Fd.Mixfile do
       {:prometheus_plugs, "~> 1.1.1"},
       {:prometheus_phoenix, "~> 1.0"},
       {:prometheus_ecto, "~> 1.0.3"},
+      {:hammer, "~> 6.0"},
       #{:prometheus_process_collector, "~> 1.0"},
       {:sentry, "~> 6.0.0"},
+      {:pleroma, git: "https://git.pleroma.social/pleroma/pleroma.git", branch: "develop"},
     ]
   end
 
