@@ -40,19 +40,22 @@ defmodule Fd.Instances.Crawler.Nodeinfo do
       href = Map.get(schema, "href")
       uri = URI.parse(href)
       version = detect_version(Map.get(schema, "rel"))
-      if version && uri.host == crawler.instance.domain do
-        [{version, uri.path} | acc]
-      else
-        acc
+      cond do
+        version && uri.host == crawler.instance.domain -> [{version, uri.path} | acc]
+        true -> acc
       end
     end)
     |> Enum.sort_by(fn({v, _}) -> v end, &>=/2)
-    {version, path} = List.first(links)
-    query_nodeinfo(crawler, version, path)
+    query_nodeinfo(crawler, List.first(links))
   end
 
-  defp query_nodeinfo(crawler, version, path) do
-    error(crawler, "Should crawl Nodeinfo ver #{inspect version} at path #{inspect path}")
+  defp query_nodeinfo(crawler) do
+    %Crawler{crawler | has_nodeinfo?: false}
+  end
+
+
+  defp query_nodeinfo(crawler, {version, path}) do
+    debug(crawler, "Should crawl Nodeinfo ver #{inspect version} at path #{inspect path}")
     case request(crawler, path) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         debug(crawler, "got nodeinfo#{inspect version} #{inspect path} " <> inspect(body))
@@ -70,6 +73,15 @@ defmodule Fd.Instances.Crawler.Nodeinfo do
         debug(crawler, "host is down " <> inspect(failed))
         %Crawler{crawler | halted?: true, fatal_error: failed}
     end
+  end
+
+  defp query_nodeinfo(crawler, nil) do
+    debug(crawler, "no valid nodeinfo")
+    %Crawler{crawler | halted?: true, fatal_error: :invalid_nodeinfo}
+  end
+
+  defp query_nodeinfo(crawler, _) do
+    %Crawler{crawler | has_nodeinfo?: false}
   end
 
   defp detect_version("http://nodeinfo.diaspora.software/ns/schema/"<>float) do

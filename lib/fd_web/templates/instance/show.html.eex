@@ -15,7 +15,9 @@
         <div class="value">
           <%= simplify_version(@instance.version || "?") %>
         </div>
+        <%= version_build_label(@instance.version) %>
       </div>
+
     </div>
   <% end %>
 </div>

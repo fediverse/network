@@ -31,6 +31,8 @@ server: true,
         {'/proxy/[...]', Plug.Adapters.Cowboy.Handler, {Pleroma.Web.Endpoint, []}},
         {'/media/[...]', Plug.Adapters.Cowboy.Handler, {Pleroma.Web.Endpoint, []}},
         {'/static/[...]', Plug.Adapters.Cowboy.Handler, {Pleroma.Web.Endpoint, []}},
+        {'/api/v1/instance/[...]', Plug.Adapters.Cowboy.Handler, {Pleroma.Web.Endpoint, []}},
+        {'/api/statusnet/config', Plug.Adapters.Cowboy.Handler, {Pleroma.Web.Endpoint, []}},
         {:_, Plug.Adapters.Cowboy.Handler, {FdWeb.Endpoint, []}}
       ]}
     ]

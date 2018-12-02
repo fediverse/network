@@ -3,21 +3,59 @@ defmodule FdWeb.InstanceView do
 
   alias Fd.Instances.Instance
 
-  def simplify_version(string) when is_binary(string) do
-    simple = string
-    |> String.split(~r/[\s-]/, parts: 2)
-    |> List.first
-    |> (fn
-      string when byte_size(string) < 15 ->
-        string
-      _ -> nil
-    end).()
+  def version_build_label(string) do
+    with \
+      [_, builds] <- String.split(string, "+", parts: 2),
+      build = String.slice(builds, 0..15)
+    do
+      content_tag(:div, content_tag(:small, build), [title: builds])
+    else
+      err ->
+        ""
+    end
+  end
+
+  def simplify_version(nil), do: nil
+  def simplify_version(""), do: ""
+
+  def simplify_version("v"<>string), do: simplify_version(string)
+
+  def simplify_version(string) do
+    full_string = string
+    {string, build} = case String.split(string, "+", parts: 2) do
+      [string, build] -> {string, build}
+      [string] -> {string, nil}
+    end
+
+    {suffix, simple_version} = cond do
+      String.match?(string, ~r/^[0-9a-z]+$/) and String.length(string) > 8 ->
+        << string :: binary-size(8), _ :: binary >> = string
+        {"*", string}
+      String.match?(string, ~r/^[0-9a-z]+$/) ->
+        {nil, string}
+      true ->
+        simplify_version_string(full_string)
+    end
+
+    suffix = if build, do: "+", else: suffix
+
 
     cond do
-      simple == string -> string
-      simple == nil -> simple
-      true ->
-        content_tag(:span, [simple, content_tag(:sup, "*")], [title: string])
+      suffix && simple_version -> content_tag(:span, [simple_version, content_tag(:sup, suffix)], [title: full_string])
+      suffix -> content_tag(:span, content_tag(:sup, suffix), [title: full_string])
+      true -> string
+    end
+  end
+
+  def simplify_version_string(string) do
+    case String.split(string, ~r/[^0-9.]/, parts: 2) do
+      [simple, ext] -> {"*", simple}
+      [version] ->
+        if String.length(version) >= 8 do
+          {"*", nil}
+        else
+          {nil, nil}
+        end
     end
   end
 

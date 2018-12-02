@@ -22,7 +22,13 @@ defmodule Fd.HumanError do
   end
 
   def format({:error, atom}) when is_atom(atom) do
-    to_string(atom)
+    format(atom)
+  end
+
+  def format(atom) when is_atom(atom) do
+    atom
+    |> to_string()
+    |> String.replace("_", " ")
   end
 
   def format(error) do

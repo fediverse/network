@@ -18,23 +18,24 @@ defmodule Fd.Pleroma do
     end
   end
 
+  def get_user(:disabled), do: :disabled
+
   def get_user(nick) when is_atom(nick) do
-    IO.puts "get user with atom #{inspect nick}"
-    with {nick, _, _} <- Map.get(@general_accounts, nick)
+    with {nick, _, _} <- Map.get(@general_accounts, nick),
+         true <- Application.get_env(:fd, :monitoring_alerts, true)
     do
       get_user(nick)
     else
+      _ -> :disabled
       _ -> {:error, :not_defined_account}
     end
   end
 
   def get_user(user=%User{}) do
-    IO.puts "Get user with user #{inspect user.id}"
     {:ok, user}
   end
 
   def get_user(nick) when is_binary(nick) do
-    IO.puts "Get user with nick #{inspect nick}"
     if user = User.get_by_nickname(sanitize_nick(nick)) do
       {:ok, user}
     else
@@ -74,31 +75,38 @@ defmodule Fd.Pleroma do
     end
   end
 
-  def post(nick, status) do
+  def post(nick, status, repeats \\ []) do
     with \
-         {:ok, user} <- get_user(nick),
-         {:allow, _} <- Hammer.check_rate("pleroma:post:#{user.id}", 60_000, 3),
+         [post_nick | repeat_nicks] <- (case nick do
+           nick when is_binary(nick) -> [nick]
+           nick when is_list(nick) -> nick
+         end),
+         {:ok, user} <- get_user(post_nick),
+         {:allow, _} <- Hammer.check_rate("pleroma:post:#{user.id}", 120_000, 30),
          {:ok, activity} <- CommonAPI.post(user, %{"status" => status})
     do
-      Logger.info "#{__MODULE__} Posted to #{nick}: #{inspect status}"
+      Logger.info "#{__MODULE__} Posted to #{post_nick} (repeats: #{inspect(repeat_nicks)}): #{inspect status}"
+      repeat(activity.id, repeat_nicks)
       {:ok, activity}
     else
+      :disabled -> {:ok, %{id: :disabled}}
       {:error, error} -> {:error, error}
       {:deny, _} -> {:error, :rate_limited}
     end
   end
 
   def repeat(_, []), do: []
+  def repeat(_, :disabled), do: :ok
+  def repeat(:disabled, _), do: :ok
 
   def repeat(ap_id, users) when is_list(users) do
-    IO.puts "repeat with users #{inspect users}"
     users = for user <- users, do: repeat(ap_id, get_user(user))
   end
 
   def repeat(ap_id, user) when is_binary(user) or is_atom(user) do
-    IO.puts "repeat with binary #{inspect user}"
     repeat(ap_id, get_user(user))
   end
+
 
   def repeat(ap_id, {:ok, user}), do: repeat(ap_id, user)
 

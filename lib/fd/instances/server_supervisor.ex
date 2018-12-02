@@ -14,7 +14,7 @@ defmodule Fd.Instances.ServerSupervisor do
       worker(Fd.Instances.Server, [], restart: :transient)
     ]
 
-    supervise(children, strategy: :simple_one_for_one)
+    supervise(children, strategy: :simple_one_for_one, max_restarts: 100, max_seconds: 2)
   end
 
 end

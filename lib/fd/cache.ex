@@ -130,7 +130,6 @@ defmodule Fd.Cache do
         for key <- get(ctx)||[] do
           [ctx, key]
           |> key()
-          |> IO.inspect
           |> delete()
         end
         delete(ctx)

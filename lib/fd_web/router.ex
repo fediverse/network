@@ -40,6 +40,17 @@ defmodule FdWeb.Router do
     get "/domain", InstanceController, :domain, as: :instance
     get "/domain/:domain", InstanceController, :index, as: :instance_domain
 
+
+    @traps ~w(wp-login.php)
+    for trap <- @traps do
+      get "/#{trap}", PageController, :trap
+    end
+
+    @notfound ~w(statistics.json siteinfo.json poco)
+    for notfound <- @notfound do
+      get "/#{notfound}", PageController, :not_found
+    end
+
     # Manage
     get "/manage", ManageController, :index, as: :manage
     get "/:instance_id/manage", ManageController, :show, as: :manage

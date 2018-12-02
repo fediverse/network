@@ -22,16 +22,23 @@ defmodule Fd.Instances.Server do
   def init([id]) do
     Logger.debug "starting instance #{inspect id}"
     instance = Instances.get_instance!(id)
-    delay = if instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.last_up_at) >= 2678400 do
-      Logger.info "instance #{instance.domain} dead, waiting"
-      {delay, _} = get_delay(instance)
-      round(delay / 2)
+    blacklisted? = Enum.any?(Application.get_env(:fd, :blacklist, []), fn(denied) ->
+      String.ends_with?(instance.domain, denied)
+    end)
+    if blacklisted? do
+      :ignore
     else
-      {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {0, 8}
-      (:crypto.rand_uniform(min_delay, max_delay) * 60) * 1000
+      delay = if Instances.dead?(instance) do
+        Logger.info "instance #{instance.domain} dead, waiting"
+        {delay, _} = get_delay(instance)
+        (:crypto.rand_uniform(round(delay / 3), round(delay / 2)) * 60) * 1000
+      else
+        {min_delay, max_delay} = if instance.monitor, do: {0, 2}, else: {0, 8}
+        (:crypto.rand_uniform(min_delay, max_delay) * 60) * 1000
+      end
+      {:ok, timer} = :timer.send_after(delay, self(), :crawl)
+      {:ok, %__MODULE__{id: id, instance: instance, timer: timer}}
     end
-    {:ok, timer} = :timer.send_after(delay, self(), :crawl)
-    {:ok, %__MODULE__{id: id, instance: instance, timer: timer}}
   end
 
   @dev Mix.env == :dev
@@ -46,11 +53,11 @@ defmodule Fd.Instances.Server do
         Fd.Instances.Crawler.run(instance)
       rescue
         e ->
-        Sentry.capture_exception(e, [stacktrace: System.stacktrace(), extra: %{instance_id: id}])
+          Sentry.capture_exception(e, [stacktrace: System.stacktrace(), extra: %{instance: instance.domain}])
         Logger.error "Server #{inspect(id)} rescued: #{inspect e}"
       catch
         e ->
-          Sentry.capture_exception(e, [extra: %{instance_id: id}])
+          Sentry.capture_exception(e, [extra: %{instance: instance.domain}])
           Logger.error "Server #{inspect(id)} catched: #{inspect e}"
       end
     end
@@ -74,15 +81,8 @@ defmodule Fd.Instances.Server do
   end
 
   defp get_delay(instance) do
-    cond do
-      instance.dead -> :instance_dead
-      instance.settings && instance.monitor && instance.settings.keep_calm -> :instance_monitor_calm
-      instance.monitor -> :instance_monitor
-      instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.last_up_at) >= 2678400 -> :instance_dead
-      instance.settings && instance.settings.keep_calm -> :instance_calm
-      instance.server == 0 -> :instance_calm
-      true -> :instance_default
-    end
+    instance
+    |> Instances.delay()
     |> Fd.Util.get_delay()
     |> (fn(delay) ->
       Logger.debug "Crawl delay for instance #{to_string(instance.id)} set to #{to_string(delay)}"

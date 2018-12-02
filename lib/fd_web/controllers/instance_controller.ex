@@ -76,7 +76,14 @@ defmodule FdWeb.InstanceController do
 
   def index(conn, params) do
     {instances, filters, stats} = basic_filter(conn, params)
-    render(conn, "index.html", stats: stats, instances: instances, title: "Instances", filters: filters)
+    title = case params do
+      %{"domain" => domain} -> "Instances on #{domain} sub-domains"
+      %{"tld" => tld} -> "Instances on TLD .#{tld}"
+      _ -> "Instances"
+    end
+    conn
+    |> assign(:title, title)
+    |> render("index.html", stats: stats, instances: instances, title: title, filters: filters)
   end
 
   def new(conn, _params) do

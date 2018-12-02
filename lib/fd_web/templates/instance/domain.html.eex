@@ -3,7 +3,7 @@
 <p>Only domains with more than one instance are listed. <%= link "List by TLDs", to: instance_path(@conn, :tld) %>.</p>
 
 <div class="rows">
-  <%= for {tld, stats} <- Map.get(@stats, "domains") do %>
+  <%= for {tld, stats} <- Enum.sort_by(Map.get(@stats, "domains"), &(Map.get(elem(&1, 1), "up", 0)), &>=/2) do %>
     <div class="col-md-2" style="height: 250px;">
       <h3><strong><%= link [".", idna(tld)], to: instance_domain_path(@conn, :index, idna(tld)) %></strong>&nbsp;
         <span class="text-success"><%= Map.get(stats, "up", "?") %></span>

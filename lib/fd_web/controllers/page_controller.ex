@@ -27,6 +27,16 @@ defmodule FdWeb.PageController do
     render(conn, "stats.html", stats: stats)
   end
 
+  def trap(conn, _) do
+    conn
+    |> redirect(external: "http://ping.online.net/10000Mo.dat")
+  end
+
+  def not_found(conn, _) do
+    conn
+    |> send_resp(404, "Not found")
+  end
+
 
   defp get_global_stats(params) do
     interval      = Map.get(params, "interval", "3hour")
