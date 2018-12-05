@@ -328,7 +328,7 @@ defmodule Fd.Instances do
 
   def delay(%Instance{} = instance) do
     cond do
-      dead_instance?(instance) -> :instance_dead
+      dead?(instance) -> :instance_dead
       instance.settings && instance.monitor && instance.settings.keep_calm -> :instance_monitor_calm
       instance.monitor -> :instance_monitor
       instance.settings && instance.settings.keep_calm -> :instance_calm
@@ -338,10 +338,10 @@ defmodule Fd.Instances do
   end
 
   def dead?(%Instance{dead: true}), do: true
-  def dead?(%Instance{} = instance}) do
+  def dead?(%Instance{} = instance) do
     cond do
       instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.last_up_at) >= @dead_after_secs -> true
-      !instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.inserted_at) >= @dead_after_secs -> true
+      !instance.last_up_at && DateTime.diff(DateTime.utc_now(), DateTime.from_naive(instance.inserted_at, "Etc/UTC")) >= @dead_after_secs -> true
       true -> false
     end
   end
