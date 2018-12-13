@@ -7,6 +7,7 @@ import LazyLoad from "vanilla-lazyload";
 
 import GraphController from "./controllers/graphController"
 import TimeController from "./controllers/timeController"
+import TimelineController from "./controllers/timelineController"
 
 document.addEventListener("DOMContentLoaded", function() {
   window.currentTimezone = moment.tz.guess();
@@ -18,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const application = Application.start()
   application.register("graph", GraphController)
   application.register("time", TimeController)
+  application.register("timeline", TimelineController)
 
   // Start LazyLoad
   const lazyLoad = new LazyLoad();

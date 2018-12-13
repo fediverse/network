@@ -31,6 +31,9 @@ defmodule Fd.ServerName do
     27  => "PubGate",
     28  => "booth",
     29  => "zap",
+    30  => "Kitsune",
+    31  => "Wordpress",
+    32  => "Nextcloud",
   }
   @server_data %{
     0 => %{
@@ -50,6 +53,7 @@ defmodule Fd.ServerName do
       link: "https://joinmastodon.org",
       source: "https://github.com/tootsuite/mastodon",
       protocols: ["ostatus", "activitypub"],
+      features: ["mastodon_api", "mastodon_api_streaming"],
       other_stats: [
         {"instances.social", "https://instances.social"},
         {"Mastodon Monitoring Project", "https://mnm.social/"},
@@ -243,8 +247,22 @@ defmodule Fd.ServerName do
     29 => %{
       name: "zap",
       slug: "zap",
+    },
+    30 => %{
+      name: "kitsune",
+      slug: "kitsune",
+      source: "https://github.com/valerauko/kitsune"
+    },
+    31 => %{
+      name: "Wordpress",
+      slug: "wordpress",
+      source: "https://github.com/pfefferle/wordpress-nodeinfo"
+    },
+    32 => %{
+      name: "Nextcloud",
+      slug: "nextcloud",
+      source: "https://github.com/nextcloud/social",
     }
-
   }
 
   @protocols %{

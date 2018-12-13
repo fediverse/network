@@ -42,7 +42,7 @@
         <p class="text-muted">
           <a href="/about">About</a>.
           &nbsp;
-          <a href="/info">How it works</a>.
+          <a href="https://write.random.sh/fediversenetwork/">Changelog & updates</a>.
           &nbsp;
           <a href="/checks">Latest checks</a>.
           &nbsp;
@@ -51,11 +51,9 @@
           <br />
           <br />
           <strong>Follow on the fediverse:</strong><br/>
-          <strong>@watch@fediverse.network</strong> <i>(new instances, upgrades, …)</i>
+          <strong><%= remote_follow(@conn, "watch", "@watch@fediverse.network", class: "btn btn-link") %></strong> <i>(new instances, upgrades, …)</i>
             &nbsp;-&nbsp;
-            @monitoring@fediverse.network <i>(watch + up/down)</i>
-            &nbsp;-&nbsp;
-            <a href="https://write.random.sh/fediversenetwork/">@fediversenetwork@write.random.sh</a> <i>(changelog)</i>
+            <%= remote_follow(@conn, "monitoring", "@monitoring@fediverse.network", class: "btn btn-link") %> <i>(watch + up/down)</i>
           </small>
           </p>
       </footer>

@@ -1,0 +1,9 @@
+<%= render "_header.html", conn: @conn, instance: @instance %>
+
+<h3>Nodeinfo</h3>
+
+<pre><code>
+<%= inspect(@instance.nodeinfo, pretty: true) %>
+</code></pre>
+
+<small>Last updated: <%= format_date(@instance.updated_at) %></small>

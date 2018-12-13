@@ -97,12 +97,13 @@ defmodule Fd.Instances do
   end
 
   @statistics_intervals %{
-    "5min" => {"5 minutes", 576}, # two days
+    "5m" => {"5 minutes", 576}, # two days
     "hourly" => {"1 hour", 192}, #one week
-    "3hour" => {"3 hour", 112}, #two weeks
+    "3h" => {"3 hour", 112}, #two weeks
     "daily" => {"1 day", 31},
     "weekly" => {"1 week", 53},
-    "monthly" => {"1 month", 12},
+    "monthly" => {"30 days", 12},
+    "90d" => {"90 days", 12},
   }
   @statistics_intervals_keys Map.keys(@statistics_intervals)
 
@@ -341,7 +342,7 @@ defmodule Fd.Instances do
   def dead?(%Instance{} = instance) do
     cond do
       instance.last_up_at && DateTime.diff(DateTime.utc_now(), instance.last_up_at) >= @dead_after_secs -> true
-      !instance.last_up_at && DateTime.diff(DateTime.utc_now(), DateTime.from_naive(instance.inserted_at, "Etc/UTC")) >= @dead_after_secs -> true
+      !instance.last_up_at && DateTime.diff(DateTime.utc_now(), DateTime.from_naive!(instance.inserted_at, "Etc/UTC")) >= @dead_after_secs -> true
       true -> false
     end
   end

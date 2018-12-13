@@ -9,7 +9,7 @@ defmodule Fd.Application do
     :ok = :error_logger.add_report_handler(Sentry.Logger)
     start_prometheus()
     Fd.Instances.Crawler.setup()
-    :ok = :hackney_pool.start_pool(:hackney_chartd, [{:timeout, 2000}, {:max_connections, 50}, {:connect_timeout, 2000}])
+    :ok = :hackney_pool.start_pool(:hackney_chartd, [{:timeout, 2000}, {:max_connections, 100}, {:connect_timeout, 2000}])
 
     children = [
       supervisor(Fd.Repo, []),

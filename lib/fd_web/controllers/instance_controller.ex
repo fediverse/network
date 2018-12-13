@@ -111,6 +111,36 @@ defmodule FdWeb.InstanceController do
     |> render(FdWeb.InstanceFederationView, "show.html", instance: instance)
   end
 
+  def public_timeline(conn, params = %{"instance_id" => id}) do
+    instance = Instances.get_instance_by_domain!(id)
+    if instance.server == 2 or instance.server == 3 do
+
+      timeline_url = Pleroma.Web.MediaProxy.url("https://#{instance.domain}/api/v1/timelines/public.json?limit=50&local=true")
+
+      req = timeline_url
+             |> HTTPoison.get!()
+
+      data = Poison.decode!(req.body)
+
+      conn
+      |> json(data)
+    else
+      send_resp(conn, 404, "not supported")
+    end
+  end
+
+  def timeline(conn, params = %{"instance_id" => id}) do
+    instance = Instances.get_instance_by_domain!(id)
+    if instance.server == 2 or instance.server == 3 do
+
+      conn
+      |> assign(:title, "#{Fd.Util.idna(instance.domain)} Timeline")
+      |> assign(:section, "timeline")
+      |> render("timeline.html", instance: instance)
+    else
+      send_resp(conn, 404, "not supported")
+    end
+  end
 
   def show(conn, params = %{"id" => id}) do
     instance      = Instances.get_instance_by_domain!(id)
@@ -153,6 +183,20 @@ defmodule FdWeb.InstanceController do
     |> render("checks.html", instance: instance, checks: checks)
   end
 
+  def nodeinfo(conn, params = %{"instance_id" => id}) do
+    instance = Instances.get_instance_by_domain!(id)
+
+    if instance.nodeinfo && !Enum.empty?(instance.nodeinfo) do
+      conn
+      |> assign(:title, "#{Fd.Util.idna(instance.domain)} nodeinfo")
+      |> assign(:private, instance.hidden)
+      |> render("nodeinfo.html", instance: instance)
+    else
+      conn
+      |> redirect(to: instance_path(conn, :show, instance))
+    end
+  end
+
   @allowed_filters ["up", "closed", "server", "age", "tld", "domain", "users", "statuses", "emojis", "peers", "max_chars"]
   defp basic_filter(conn,params) do
     Fd.Cache.lazy("list:#{conn.request_path}?#{conn.query_string}", &run_basic_filter/1, [params])
@@ -182,6 +226,7 @@ defmodule FdWeb.InstanceController do
 
   def get_instance_stats(instance, params) do
     interval      = Map.get(params, "interval", "hourly")
+    limit         = Map.get(params, "limit", nil)
     {stats, ttl}         = Instances.get_instance_statistics(instance.id, interval)
     get_serie = fn(stats, key) ->
       Enum.map(stats, fn(stat) -> Map.get(stat, key, 0)||0 end)

@@ -26,7 +26,16 @@
     <strong>SimplePolicy rules:</strong><br />
     <ul>
       <%= for {type, instances} <- Map.get(@federation, "mrf_simple") do %>
-        <li><strong><%= type %></strong>: <%= Enum.map(instances, fn(i) -> link(i, to: instance_path(@conn, :show, i)) end) |> Enum.intersperse([raw(", ")]) %></li>
+        <li><strong><%= type %></strong>: <%= Enum.map(instances, fn
+(i) when is_binary(i) -> case Fd.Instances.get_instance_by_domain(i) do
+%{domain: i} -> link(i, to: instance_path(@conn, :show, i))
+_ -> i
+end
+{k, v} when is_binary(k) and is_binary(v) -> ["\"", k, "\" = \"", v, "\""]
+i -> content_tag(:code, inspect(i, pretty: true))
+end) |> Enum.intersperse([raw(", ")])
+
+%></li>
       <% end %>
     </ul>
   <% end %>
@@ -34,6 +43,7 @@
 
 <p>
   <small>
-    Not all policies may be disclosed by the server.
+    Not all policies may be disclosed by the server or displayed by fediverse.network interface.
+    <%= link "View nodeinfo", to: instance_instance_path(@conn, :nodeinfo, @instance) %>.
   </small>
 </p>

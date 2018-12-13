@@ -21,6 +21,12 @@ defmodule FdWeb.CommonView do
     content_tag(:time, iso, datetime: iso, "data-controller": "time", "data-mode": mode)
   end
 
+  def remote_follow(conn, username, title \\ nil, submit_opts \\ []) do
+    form_for(conn, Pleroma.Web.Router.Helpers.util_path(Pleroma.Web.Endpoint, :remote_subscribe), [class: "form-inline", style: "display: inline;"], fn(f) ->
+      [hidden_input(f, :nickname, value: username), hidden_input(f, :profile, value: username), submit(title || username, submit_opts)]
+    end)
+  end
+
   defp to_iso8601(naive = %NaiveDateTime{}) do
     NaiveDateTime.to_iso8601(naive) <> "Z"
   end

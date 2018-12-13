@@ -11,6 +11,14 @@ defmodule FdWeb.PageController do
     render conn, "about.html"
   end
 
+  def about_subpage(conn, %{"id" => "more"}) do
+    conn
+    |> redirect(to: "/about")
+  end
+
+  def about_subpage(conn, %{"id" => id}) when id in ["charts"] do
+    render(conn, "about_#{id}.html")
+  end
 
   def info(conn, _params) do
     render conn, "info.html"

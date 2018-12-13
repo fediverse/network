@@ -2,6 +2,9 @@
   <%= link "summary", to: instance_path(@conn, :show, @instance), class: "btn btn-default #{active_section_class(@conn, "summary")}" %>
   <%= link "stats", to: instance_instance_path(@conn, :stats, @instance), class: "btn btn-default #{active_section_class(@conn, "stats")}" %>
   <%= link "checks", to: instance_instance_path(@conn, :checks, @instance), class: "btn btn-default #{active_section_class(@conn, "checks")}" %>
+  <%= if @instance.server == 2 || @instance.server == 3 do %>
+    <%= link "timeline", to: instance_instance_path(@conn, :timeline, @instance), class: "btn btn-default #{active_section_class(@conn, "timeline")}" %>
+  <% end %>
   <%= link(idna(@instance.domain) <> " ❯", to: "https://#{@instance.domain}", class: "btn btn-default") %>
 </div>
 <h2>

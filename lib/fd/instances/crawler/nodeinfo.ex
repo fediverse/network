@@ -59,6 +59,14 @@ defmodule Fd.Instances.Crawler.Nodeinfo do
     case request(crawler, path) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         debug(crawler, "got nodeinfo#{inspect version} #{inspect path} " <> inspect(body))
+
+        # REMOVE WHEN Wordpress nodeinfo is fixed: https://github.com/pfefferle/wordpress-nodeinfo/issues/1
+        body = if is_map(Map.get(body, "metadata")) do
+          body
+        else
+          Map.put(body, "metadata", %{})
+        end
+
         %Crawler{crawler | has_nodeinfo?: true, nodeinfo: body}
       {:ok, %HTTPoison.Response{status_code: code}} when code in @not_found ->
         debug(crawler, "nodeinfo #{path} is not found. #{inspect code}")

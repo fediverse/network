@@ -487,11 +487,14 @@ defmodule Fd.Instances.Crawler do
     comments = get_in(crawler.nodeinfo, ["usage", "localComments"])
     server = Fd.ServerName.to_int(get_in(crawler.nodeinfo, ["software", "name"])||0)
     version = get_in(crawler.nodeinfo, ["software", "version"])
-    name = get_in(crawler.nodeinfo, ["metadata", "nodeName"])
-    description = get_in(crawler.nodeinfo, ["metadata", "description"])
-    email = get_in(crawler.nodeinfo, ["metadata", "email"])
-    private = get_in(crawler.nodeinfo, ["metadata", "private"])
     signup = get_in(crawler.nodeinfo, ["openRegistrations"])
+
+    metadata = get_in(crawler.nodeinfo, ["metadata"])
+    name = Map.get(metadata, "nodeName")
+    description = Map.get(metadata, "description")
+    email = Map.get(metadata, "email")
+    private = Map.get(metadata, "private")
+
     statuses = cond do
       posts && comments -> posts + comments
       posts -> posts
@@ -882,6 +885,9 @@ defmodule Fd.Instances.Crawler do
             debug(crawler, "body parsed in json!")
             resp = %HTTPoison.Response{response | body: body}
             {:ok, resp}
+          {:ok, other} ->
+            info(crawler, "invalid json type, not a map " <> inspect(other))
+            {:error, :invalid_json_type}
           {:error, error} ->
             info(crawler, "invalid json: " <> inspect({error, body}))
             {:error, error}

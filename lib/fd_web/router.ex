@@ -20,6 +20,7 @@ defmodule FdWeb.Router do
 
     get "/info", PageController, :info
     get "/about", PageController, :about
+    get "/about/:id", PageController, :about_subpage
     get "/monitoring", PageController, :monitoring
     get "/stats", PageController, :stats
 
@@ -60,11 +61,14 @@ defmodule FdWeb.Router do
     get "/manage/login/:token", ManageController, :login_by_token, as: :manage
 
     resources "/", InstanceController, only: [:index, :show] do
+      get "/nodeinfo", InstanceController, :nodeinfo
       get "/stats", InstanceController, :stats
       get "/stats/:interval", InstanceController, :stats
       get "/emojis", InstanceController, :emojis
       get "/peers", InstanceController, :peers
       get "/federation", InstanceController, :federation
+      get "/timeline", InstanceController, :timeline
+      get "/public_timeline", InstanceController, :public_timeline
       get "/checks", InstanceController, :checks
       get "/checks/:from_time", CheckController, :show, as: :check
       get "/checks/:from_time/:to_time", CheckController, :show, as: :check

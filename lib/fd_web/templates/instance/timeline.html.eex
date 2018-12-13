@@ -1,0 +1,10 @@
+<%= render "_header.html", conn: @conn, instance: @instance %>
+
+<h3>Timeline</h3>
+
+<div class="container timeline" data-controller="timeline" data-timeline-url="public_timeline">
+  <i class="loading">Fetching timeline...</i>
+  <div class="alert alert-danger" style="display:none">
+    An error occurred while loading the instance's timeline.
+  </div>
+</div>

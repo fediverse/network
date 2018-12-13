@@ -112,10 +112,15 @@
         </ul>
         <br />
         <%= FdWeb.InstanceFederationView.overview(@conn, @instance) %>
-        <br />
+        <%= if @instance.nodeinfo && !Enum.empty?(@instance.nodeinfo) do %>
+          <li><%= link "NodeInfo", to: instance_instance_path(@conn, :nodeinfo, @instance) %></li>
+          <br />
+        <% end %>
+          <br />
         <li>Found <%= format_date(@instance.inserted_at) %></li>
         <%= if Map.get(@instance.settings || %{}, :fedibot) do %>
-          <li>Follow changes at <code>@<%= Fd.Pleroma.sanitize_nick(@instance.domain) %>@fediverse.network</code></li>
+          <% nick = Fd.Pleroma.sanitize_nick(@instance.domain) %>
+          <li>Follow changes at <%= remote_follow(@conn, nick, "@#{nick}@fediverse.network", class: "btn btn-link") %></li>
         <% end %>
     </ul>
   </div>
@@ -124,7 +129,7 @@
       <li>
         <span class="label">Host</span>
         <ul>
-          <%= if Fd.Domain.total_count(@host_stats, @instance.domain_base) > 1 do %>  
+          <%= if Fd.Domain.total_count(@host_stats, @instance.domain_base) > 1 do %>
           <li>
             <span class="label">Domain</span>
             <span class="value">
@@ -177,8 +182,10 @@
 
 <%= if @checks do %>
   <h4>Availablity
-    <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id))%>%%
-    <small><small class="text-muted">(last 31 days)</small></small>
+    <%= if avail = Fd.Instances.get_uptime_percentage(@instance.id) do %>
+      <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id))%>%
+      <small><small class="text-muted">(last 31 days)</small></small>
+    <% end %>
     <small><small><%= link "Checks history >", to: instance_instance_path(@conn, :checks, @instance)%></small></small>
   </h4>
 

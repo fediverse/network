@@ -18,7 +18,9 @@ Other protocols than oStatus/ActivityPub may be added some day, for more details
 ### API
 {: #api}
 
-It's planned as the next step once the underlying crawler will be more correct. :)
+[Charts API](/about/charts).
+
+Data: It's planned as the next step once the underlying crawler will be more correct. :)
 
 ### Code
 
@@ -30,7 +32,9 @@ Written in Elixir, uses PostgreSQL with TimescaleDB, and licensed under AGPL; ho
 
 ### Credits
 
-Developed by [contributors](https://git.yt/random/fediverse-network/graphs/master) ([@href](https://soc.ialis.me/@href), [@heacte](https://soc.ialis.me/@hecate), [@lerk](https://comm.network/@lerk)) and hosted by [@href](https://soc.ialis.me/@href).
+Developed by [contributors](https://git.yt/random/fediverse-network/graphs/master) ([@href](https://soc.ialis.me/@href), [@hecate](https://soc.ialis.me/@hecate), [@lerk](https://comm.network/@lerk)) and hosted by [@href](https://soc.ialis.me/@href).
+
+Contains an embedded [Pleroma](https://pleroma.social) instance.
 
 Thanks to everyone who helped me test, implemented nodeinfo endpoints, … ([@dashie](https://oldbytes.space/@dashie), …).
 
