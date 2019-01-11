@@ -40,7 +40,9 @@ defmodule FdWeb.Router do
     get "/tld/:tld", InstanceController, :index, as: :instance_tld
     get "/domain", InstanceController, :domain, as: :instance
     get "/domain/:domain", InstanceController, :index, as: :instance_domain
+    get "/t/:tag", InstanceController, :index, as: :instance_tag
 
+    get "/reports/:report", ReportController, :show
 
     @traps ~w(wp-login.php)
     for trap <- @traps do

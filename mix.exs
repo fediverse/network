@@ -33,7 +33,7 @@ defmodule Fd.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.3.0"},
+      {:phoenix, git: "https://github.com/phoenixframework/phoenix.git", branch: "v1.4", override: true},#"~> 1.4.0"},
       {:phoenix_pubsub, "~> 1.0", override: true},
       {:phoenix_ecto, "~> 3.2"},
       {:postgrex, ">= 0.0.0"},
@@ -47,7 +47,7 @@ defmodule Fd.Mixfile do
       {:jason, "~> 1.0"},
       {:idna, "~> 5.1", override: true},
       {:public_suffix, "~> 0.6.0"},
-      {:swoosh, "~> 0.13"},
+      {:swoosh, "~> 0.20"},
       {:phoenix_markdown, "~> 1.0"},
       {:html_sanitize_ex, "~> 1.3.0-rc3"},
       {:timex, "~> 3.3"},
@@ -59,8 +59,13 @@ defmodule Fd.Mixfile do
       {:prometheus_phoenix, "~> 1.0"},
       {:prometheus_ecto, "~> 1.0.3"},
       {:hammer, "~> 6.0"},
+      {:poison, "~> 3.0"},
+      {:ex_cldr, "~> 2.2", override: true},
+      {:ex_cldr_numbers, "~> 2.1"},
+      {:ex_cldr_lists, "~> 2.0"},
+      {:ex_cldr_units, "~> 2.1"},
       #{:prometheus_process_collector, "~> 1.0"},
-      {:sentry, "~> 6.0.0"},
+      {:sentry, "~> 7.0.0"},
       {:pleroma, git: "https://git.pleroma.social/pleroma/pleroma.git", branch: "develop"},
     ]
   end

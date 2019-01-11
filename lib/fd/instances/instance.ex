@@ -42,6 +42,9 @@ defmodule Fd.Instances.Instance do
 
     has_many :checks, Fd.Instances.InstanceCheck
 
+    has_many :taggings, Fd.Tags.Tagging
+    many_to_many :tags, Fd.Tags.Tag, join_through: "taggings", on_replace: :delete
+
     timestamps()
   end
 
@@ -60,8 +63,10 @@ defmodule Fd.Instances.Instance do
   def manage_changeset(%Instance{} = instance, attrs) do
     instance
     |> cast(attrs, [:monitor, :dead])
+    |> Fd.Tags.Tag.put_tags(attrs)
     |> cast_embed(:settings)
   end
+
 
 end
 

@@ -34,6 +34,7 @@ defmodule Fd.ServerName do
     30  => "Kitsune",
     31  => "Wordpress",
     32  => "Nextcloud",
+    33  => "diaspora",
   }
   @server_data %{
     0 => %{
@@ -50,6 +51,7 @@ defmodule Fd.ServerName do
     },
     2 => %{
       slug: "mastodon",
+      name: "Mastodon",
       link: "https://joinmastodon.org",
       source: "https://github.com/tootsuite/mastodon",
       protocols: ["ostatus", "activitypub"],
@@ -62,6 +64,7 @@ defmodule Fd.ServerName do
     },
     3 => %{
       slug: "pleroma",
+      name: "Pleroma",
       link: "https://pleroma.social",
       description: "Pleroma is an ActivityPub/OStatus server built on Elixir. New and rising!",
       source: "https://git.pleroma.social/pleroma/pleroma",
@@ -73,6 +76,7 @@ defmodule Fd.ServerName do
     },
     4 => %{
       slug: "peertube",
+      name: "PeerTube",
       description: "PeerTube is a video streaming platform",
       link: "https://joinpeertube.org",
       source: "https://github.com/Chocobozzz/PeerTube",
@@ -83,6 +87,7 @@ defmodule Fd.ServerName do
     },
     5 => %{
       slug: "hubzilla",
+      name: "Hubzilla",
       link: "https://hubzilla.org",
       source: "https://github.com/redmatrix/hubzilla",
       notice: "Statistics are not available for private instances",
@@ -90,6 +95,7 @@ defmodule Fd.ServerName do
     },
     6 => %{
       slug: "postactiv",
+      name: "PostActiv",
       link: "https://www.postactiv.com",
       source: "http://gitea.postactiv.com/postActiv/postActiv",
       notice: "Statistics are not available",
@@ -97,6 +103,7 @@ defmodule Fd.ServerName do
     },
     7 => %{
       slug: "friendica",
+      name: "Friendica",
       link: "https://friendi.ca/",
       source: "https://github.com/friendica/friendica",
       notice: "Statistics are not available for private instances",
@@ -104,6 +111,7 @@ defmodule Fd.ServerName do
     },
     8 => %{
       slug: "kroeg",
+      name: "Kroeg",
       description: "Experimental ActivityPub server in Rust",
       link: "http://puckipedia.com/kroeg",
       source: "https://git.puckipedia.com/kroeg",
@@ -111,6 +119,7 @@ defmodule Fd.ServerName do
     },
     9 => %{
       slug: "misskey",
+      name: "Misskey",
       source: "https://github.com/syuilo/misskey",
       protocols: ["activitypub"],
     },
@@ -128,6 +137,7 @@ defmodule Fd.ServerName do
     },
     12 => %{
       slug: "funkwhale",
+      name: "Funkwhale",
       description: "A modern, convivial and free music server",
       link: "https://funkwhale.audio/",
       source: "https://code.eliotberriot.com/funkwhale",
@@ -135,6 +145,7 @@ defmodule Fd.ServerName do
     },
     13 => %{
       slug: "plume",
+      name: "Plume",
       description: "A federated blog engine",
       source: "https://github.com/Plume-org/Plume",
       protocols: ["activitypub"],
@@ -143,10 +154,10 @@ defmodule Fd.ServerName do
     # Castling is closed source and single instance so we hide it :)
     14 => %{
       slug: "castlingclub",
-      hidden: false,
+      name: "Castling Club",
       description: "A federated chess server",
       link: "https://castling.club/",
-      source: false,
+      source: "https://github.com/stephank/castling.club",
       protocols: ["activitypub"],
     },
     15 => %{
@@ -242,7 +253,7 @@ defmodule Fd.ServerName do
     28 => %{
       name: "booth",
       slug: "booth",
-      source: false
+      source: "https://gitlab.com/zdunn/booth",
     },
     29 => %{
       name: "zap",
@@ -254,14 +265,20 @@ defmodule Fd.ServerName do
       source: "https://github.com/valerauko/kitsune"
     },
     31 => %{
-      name: "Wordpress",
+      name: "WordPress",
       slug: "wordpress",
-      source: "https://github.com/pfefferle/wordpress-nodeinfo"
+      source: "https://github.com/fediverse/wordpress"
     },
     32 => %{
       name: "Nextcloud",
       slug: "nextcloud",
       source: "https://github.com/nextcloud/social",
+    },
+    33 => %{
+      name: "diaspora*",
+      slug: "diaspora",
+      hidden: true,
+      ignore_stats: true,
     }
   }
 
@@ -277,6 +294,10 @@ defmodule Fd.ServerName do
     "zot" => %{
       name: "ZOT",
       logo: "https://static.fediverse.network/icons/zot.png"
+    },
+    "diaspora" => %{
+      name: "Diaspora",
+      logo: "https://static.fediverse.network/icons/diaspora.png",
     }
   }
 
@@ -301,6 +322,15 @@ defmodule Fd.ServerName do
     def exists?(unquote(name)), do: true
     def exists?(unquote(path)), do: true
     def data(unquote(id)), do: unquote(Macro.escape(data))
+  end
+
+  def valid_server_ids() do
+    Enum.reduce(@server_data, [], fn({id, data}, acc) ->
+      cond do
+        Map.get(data, :ignore) == true -> acc
+        true -> [id | acc]
+      end
+    end)
   end
 
   def from_int(_), do: @default

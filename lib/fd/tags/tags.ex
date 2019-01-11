@@ -8,6 +8,32 @@ defmodule Fd.Tags do
 
   alias Fd.Tags.Tag
 
+  def tag_instance(instance = %Fd.Instances.Instance{id: instance_id}, tags) do
+    tags = case tags do
+      tags when is_list(tags) -> tags
+      tag when is_binary(tag) -> [tag]
+    end
+    tags = for tag <- tags, do: get_or_create_tag(tag)
+  end
+
+  def get_or_create_tag("#"<>name), do: get_or_create_tag(name)
+
+  def get_or_create_tag(name) do
+    with \
+         nil <- Repo.get_by(Tag, name: name),
+         {:ok, tag} <- create_tag(%{"name" => name})
+    do
+      if tag.canonical_id do
+        tag = Fd.preload(tag, :canonical)
+        tag.canonical
+      else
+        tag
+      end
+    else
+      tag = %Tag{} -> tag
+    end
+  end
+
   @doc """
   Returns the list of tags.
 

@@ -45,6 +45,7 @@ defmodule Fd.Instances.Server do
   def handle_info(:crawl, state = %__MODULE__{id: id}) do
     if state.timer, do: :timer.cancel(state.timer)
     instance = Instances.get_instance!(id)
+               |> Fd.Repo.preload(:tags)
     if Map.get(instance.settings || %{}, :fedibot), do: {:ok, _} = Fd.Pleroma.create_or_get_user(instance.domain, instance.domain, "https://fediverse.network/#{instance.domain}")
     if @dev do
       Fd.Instances.Crawler.run(instance)

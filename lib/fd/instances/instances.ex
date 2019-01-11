@@ -37,18 +37,22 @@ defmodule Fd.Instances do
 
   """
 
-  def get_instance!(id), do: Repo.get!(Instance, id)
+  def get_instance!(id), do: Repo.get!(Instance, id) |> Repo.preload(:tags)
 
   def get_instance_by_domain!(domain) do
     domain = Fd.Util.from_idna(domain)
     from(i in Instance, where: i.domain == ^domain)
     |> Repo.one!
+    |> Repo.preload(:tags)
   end
 
   def get_instance_by_domain(domain) when is_binary(domain) do
     domain = Fd.Util.from_idna(domain)
-    from(i in Instance, where: i.domain == ^domain)
-    |> Repo.one
+    query = from(i in Instance, where: i.domain == ^domain)
+    case Repo.one(query) do
+      {:ok, instance} -> Repo.preload(instance, :tags)
+      error -> error
+    end
   end
 
   def get_instance_by_domain(_), do: nil
@@ -295,6 +299,24 @@ defmodule Fd.Instances do
     |> Repo.update()
   end
 
+  def add_tag(%Instance{} = instance, tag) do
+    instance = Repo.preload(instance, :tags)
+
+    tags = Enum.map(instance.tags, fn(tag) -> tag.name end) ++ [tag]
+    |> Enum.uniq()
+
+    instance
+    |> Instance.manage_changeset(%{"tags" => tags})
+    |> Repo.update()
+  end
+
+  def change_tags(%Instance{} = instance, tags) do
+    instance = Repo.preload(instance, :tags)
+
+    instance
+    |> Instance.manage_changeset(%{"tags" => tags})
+    |> Repo.update()
+  end
 
   @doc """
   Deletes a Instance.

@@ -13,6 +13,7 @@ defmodule FdWeb.ManageController do
       admin? -> Instances.get_instance_by_domain!(id)
       true -> instance
     end
+    |> Fd.Repo.preload(:tags)
     change = Instances.change_instance(instance)
     conn
     |> assign(:title, "Manage #{Fd.Util.idna(instance.domain)}")
@@ -34,8 +35,10 @@ defmodule FdWeb.ManageController do
       admin? -> Instances.get_instance_by_domain!(id)
       true -> u_instance
     end
+    |> Fd.Repo.preload(:tags)
     case Instances.update_manage_instance(instance, instance_params) do
       {:ok, _} ->
+        instance = Fd.Repo.preload(instance, :tags)
         Server.crawl(instance.id)
         if instance == u_instance do
           redirect(conn, to: manage_path(conn, :index))

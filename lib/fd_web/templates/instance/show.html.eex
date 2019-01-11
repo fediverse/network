@@ -122,6 +122,10 @@
           <% nick = Fd.Pleroma.sanitize_nick(@instance.domain) %>
           <li>Follow changes at <%= remote_follow(@conn, nick, "@#{nick}@fediverse.network", class: "btn btn-link") %></li>
         <% end %>
+        <%= unless @instance.tags == [] do %>
+          <li>Tagged 
+            <%= Enum.intersperse(for(tag <- @instance.tags, do: link(tag.name, to: instance_tag_path(@conn, :index, tag.name))), ", ") %>
+        <% end %>
     </ul>
   </div>
   <div class="col-sm">

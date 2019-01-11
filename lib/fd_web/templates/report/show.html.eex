@@ -1,0 +1,156 @@
+<h1>🎉 <%= @name %> 🎉</h1>
+
+<style type="text/css">
+p.lead strong, p.lead b { font-weight: bold }
+</style>
+
+<div class="row">
+  <div class="col">
+<p class="lead">
+  <span class="text-muted">
+    From <%= format_date(@stats.query.from) %> to <%= format_date(@stats.query.to) %>,
+  </span>
+  <br />
+
+  the reachable fediverse grew
+
+  <br />
+
+  from <b><%= number(get_in(@stats, [:network, :previous, :instances])) %></b>
+    instances
+    to <b><%= number(get_in(@stats, [:network, :all, :instances])) %></b>
+
+  <br />
+
+  from <b><%= number(get_in(@stats, [:network, :users_first])) %></b>
+  users
+  to <b><%= number(get_in(@stats, [:network, :users_last])) %></b>
+
+  <br />
+
+  and from <b><%= number(get_in(@stats, [:network, :statuses_first])) %></b>
+  statuses
+  to <b><%= number(get_in(@stats, [:network, :statuses_last])) %></b>
+</p>
+</div>
+
+<div class="col">
+  <p class="lead">
+  <br />
+  <%= percentage("instances", get_in(@stats, [:network, :previous, :instances]), get_in(@stats, [:network, :all, :instances])) %>
+  <br />
+  <%= percentage("users", get_in(@stats, [:network, :users_first]), get_in(@stats, [:network, :users_last])) %>
+  <br />
+  <%= percentage("statuses", get_in(@stats, [:network, :statuses_first]), get_in(@stats, [:network, :statuses_last])) %>
+  </p>
+</div>
+
+</div>
+
+<p class="lead">
+  <br /><br />
+
+  <span class="text-muted">In this period,</span>
+  <br />
+  <strong><%= number(get_in(@stats, [:network, :instances])) %> new instances</strong> joined the fediverse,
+  <strong><%= number(get_in(@stats, [:network, :users])) %> users signed up</strong> and <strong>wrote <%= number(get_in(@stats, [:network, :statuses])) %> statuses</strong>
+  <br />
+  while <strong><%= number(get_in(@stats, [:network, :dead, :instances])) %> instances became down</strong>, <strong>removing</strong> <%= number(get_in(@stats, [:network, :dead, :users_first])) %> users
+  and <%= number(get_in(@stats, [:network, :dead, :statuses_first])) %> statuses.
+</p>
+
+<br />
+<br />
+
+<h2 id="servers">
+  Servers
+</h2>
+<br />
+
+<div class="row">
+  <% stats = Enum.map(@stats.servers, fn(stat) ->
+    Map.merge(stat, Fd.ServerName.data(stat.server||0))
+end)
+  |> Enum.filter(fn(stat) ->
+stat && Map.get(stat, :name) && !Map.get(stat, :hidden, false) && Map.get(stat, :instances) && ((Map.get(stat, :instances) - (Map.get(stat, :dead_instances)||0)) > 2)
+  end)
+  |> Enum.with_index()
+%>
+
+<% neg = Enum.map(@stats.servers, fn(stat) ->
+    Map.merge(stat, Fd.ServerName.data(stat.server||0))
+end)
+  |> Enum.filter(fn(stat) ->
+stat && Map.get(stat, :name) && !Map.get(stat, :hidden, false) && Map.get(stat, :instances) && ((Map.get(stat, :instances) - (Map.get(stat, :dead_instances)||0)) < 0)
+  end)
+  |> Enum.with_index()
+%>
+
+  <% new = Enum.map(@stats.servers, fn(stat) ->
+    Map.merge(stat, Fd.ServerName.data(stat.server||0))
+end)
+  |> Enum.filter(fn(stat) ->
+stat && Map.get(stat, :name) && !Map.get(stat, :hidden, false) && Map.get(stat, :instances) && ((Map.get(stat, :instances)) > 1)
+  end)
+  |> Enum.with_index()
+%>
+  <%= for {stat, id} <- stats do %>
+
+    <div class="col-sm-4">
+      <h3 id="server-<%= stat.slug %>">#<%= id + 1 %> <%= stat.name %></h3>
+      <ul>
+        <li><strong><%= number((Map.get(stat, :instances, 0)||0) - (Map.get(stat, :dead_instances, 0)||0), plus: true) %> instances</strong>
+          <br /><%= number(Map.get(stat, :instances)) %> new and <%= number(Map.get(stat, :dead_instances)) %> down</li>
+        <%= if stat[:users] && stat[:users] > 0 do %><li>New users: <%= number(Map.get(stat, :users)) %></li><% end %>
+        <%= if stat[:statuses] && stat[:statuses] > 0 do %><li>New statuses: <%= number(Map.get(stat, :statuses)) %></li><% end %>
+      </ul>
+    </div>
+
+<% end %>
+</div>
+
+<br />
+<h3>Declining servers</h3>
+
+<div class="row">
+  <%= for {stat, id} <- neg do %>
+
+    <div class="col-sm-4">
+      <h3 id="server-<%= stat.slug %>">#<%= id + 1 %> <%= stat.name %></h3>
+      <ul>
+        <li><strong><%= number((Map.get(stat, :instances, 0)||0) - (Map.get(stat, :dead_instances, 0)||0), plus: true) %> instances</strong>
+          <br /><%= number(Map.get(stat, :instances)) %> new and <%= number(Map.get(stat, :dead_instances)) %> down</li>
+        <%= if stat[:users] && stat[:users] > 0 do %><li>New users: <%= number(Map.get(stat, :users)) %></li><% end %>
+        <%= if stat[:statuses] && stat[:statuses] > 0 do %><li>New statuses: <%= number(Map.get(stat, :statuses)) %></li><% end %>
+      </ul>
+    </div>
+
+<% end %>
+</div>
+
+<br />
+<br />
+<!--
+<h2 id="instances">Instances</h2>
+
+<h3>Biggest new instances</h3>
+
+<h3>Biggest dead instances</h3>
+
+<h3>All time biggest</h3>
+-->
+<hr />
+<small>
+  <strong>work in progress -- not completed yet, numbers are a bit wrong</strong>
+  <br />
+  Data from <%= format_date(@stats.query.from) %> to <%= format_date(@stats.query.to) %> (fediverse.network started crawling on the 23 April)
+  <br />
+  Counts does not includes instances that have been unreachable since 30 days after the last time period.
+  <br />
+  Died instances are instances without a successful check since 30 days after the last time period.
+  <br />
+  Servers are sorted by new instances.
+  <br />
+  <br />
+  <i>Happy new year, thanks for reading! See you in twelve months...</i>
+</small>

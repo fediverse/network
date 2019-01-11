@@ -22,6 +22,9 @@
       <header class="header">
         <nav role="navigation" class="float-md-right">
           <ul class="nav nav-pills">
+            <%= if Mix.env == :dev do %>
+              <li class="nav-item"><a class="nav-link" href="/reports/2018" style="color: red; font-weight: bold;">🎉 2018 Report</a></li>
+            <% end %>
             <li class="nav-item"><a class="nav-link" href="/">instances</a></li>
             <li class="nav-item"><a class="nav-link" href="/tld">TLDs</a></li>
             <li class="nav-item"><a class="nav-link" href="/manage" title="Manage your instance: Enable monitoring or hide from listings">manage</a></li>
@@ -58,19 +61,5 @@
           </p>
       </footer>
     </div> <!-- /container -->
-    <script type="text/javascript">
-      var _paq = _paq || [];
-      _paq.push(['trackPageView']);
-      _paq.push(['enableLinkTracking']);
-      (function() {
-        var u="//matomo.adm.random.sh/";
-        _paq.push(['setTrackerUrl', u+'/js/index.php']);
-        _paq.push(['setSiteId', '12']);
-        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'/js/p.min.js'; s.parentNode.insertBefore(g,s);
-      })();
-    </script>
-    <img src="https://matomo.adm.random.sh/js/index.php?idsite=12&rec=1" style="border:0" alt="" />
-
   </body>
 </html>

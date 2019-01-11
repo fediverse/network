@@ -41,7 +41,7 @@ defmodule FdWeb do
       import FdWeb.ErrorHelpers
       import FdWeb.Gettext
 
-      import FdWeb.CommonView, only: [idna: 1, format_date: 1, format_date: 2, remote_follow: 2, remote_follow: 3, remote_follow: 4]
+      import FdWeb.CommonView, only: [idna: 1, format_date: 1, format_date: 2, remote_follow: 2, remote_follow: 3, remote_follow: 4, number: 1, number: 2, positive: 1]
     end
   end
 

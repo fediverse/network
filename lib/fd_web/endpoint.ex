@@ -1,5 +1,6 @@
 defmodule FdWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :fd
+  use Sentry.Phoenix.Endpoint
 
   plug FdWeb.PipelineInstrumenterPlug
   plug FdWeb.MetricsExporterPlug

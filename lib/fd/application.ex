@@ -6,7 +6,8 @@ defmodule Fd.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    :ok = :error_logger.add_report_handler(Sentry.Logger)
+    #:ok = :error_logger.add_report_handler(Sentry.LoggerBackend)
+    {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
     start_prometheus()
     Fd.Instances.Crawler.setup()
     :ok = :hackney_pool.start_pool(:hackney_chartd, [{:timeout, 2000}, {:max_connections, 100}, {:connect_timeout, 2000}])

@@ -82,6 +82,14 @@
         <div class=""><%= error_tag s, :federation_restrictions_link %></div>
       </div>
     <% end %>
+    <div class="form-group">
+      <label>Tags</label>
+      <%= text_input f, :tags, class: "form-control", value: Enum.map(@instance.tags, fn(t) -> t.name end) |> Enum.join(", ") %>
+      <p class="text-muted mb-0">
+        Comma separated. Please use CamelCase words.
+      </p>
+      <div class=""><%= error_tag f, :tags %></div>
+    </div>
   <% else %>
     <%= inputs_for f, :settings, fn s -> %>
       <div class="alert alert-danger">

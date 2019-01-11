@@ -12,6 +12,46 @@ defmodule FdWeb.InstanceController do
     conn
   end
 
+  def index(conn, %{"tag" => tag_name} = params) do
+    {_, filters, stats} = basic_filter(conn, Map.put(params, "up", "all"))
+
+    tag = from(t in Fd.Tags.Tag, where: t.name == ^tag_name)
+        |> Repo.one!
+
+    tag = if tag.canonical_id do
+      Repo.preload(tag, :canonical).canonical
+    else
+      tag
+    end
+
+    if tag_name == tag.name do
+      i = from(t in Fd.Tags.Tag, where: t.id == ^tag.id or (t.canonical_id == ^tag.id))
+      |> join(:inner, [t], tg in Fd.Tags.Tagging, (tg.tag_id == t.id) or (tg.tag_id in t.includes))
+      |> join(:inner, [t, tg], i in Fd.Instances.Instance, tg.instance_id == i.id)
+      |> select([t, _, i], i)
+      |> Repo.all
+
+      ids = Enum.map(i, fn(i) -> i.id end)
+      stats = from(i in Instance,
+        where: i.id in ^ids,
+        select: %{
+          "instances" => count(i.id),
+          "users" => sum(i.users),
+          "statuses" => sum(i.statuses)
+        })
+        |> Repo.one
+
+      title = "#{tag.name} instances"
+
+      conn
+      |> assign(:title, title)
+      |> assign(:tag, tag)
+      |> render("index.html", instances: i, title: title, stats: stats, filters: nil)
+    else
+      redirect(conn, to: instance_tag_path(conn, :index, tag.name))
+    end
+  end
+
   def index(conn = %{request_path: "/all"}, params) do
     {instances, filters, stats} = basic_filter(conn, Map.put(params, "up", "all"))
     conn
@@ -214,7 +254,6 @@ defmodule FdWeb.InstanceController do
     |> Enum.into(Map.new)
     |> Map.put_new("up", "true")
     |> Map.put_new("server", "known")
-    |> IO.inspect
     instances = Enum.reduce(filters, from(i in Instance), &basic_filter_reduce/2)
     |> select([q], %Instance{id: q.id, domain: q.domain, up: q.up, server: q.server, statuses: q.statuses, users: q.users,
       peers: q.peers, emojis: q.emojis, hidden: q.hidden, signup: q.signup, dead: q.dead, version: q.version,

@@ -1,5 +1,6 @@
 <h2><%= @title %></h2>
 
+<%= if @filters do %>
 <ul class="filters">
   <li class="filter">
     <strong>Status</strong>
@@ -39,6 +40,16 @@
 </p>
 
 <%= server_info(@filters["server"]) %>
+<% end %>
+
+<%= if Map.get(@conn.assigns, :tag) do %>
+  <%= raw(Earmark.as_html!(@conn.assigns[:tag].description || "")) %>
+
+  <br />
+  <p>
+    Instances: <%= @stats["instances"] %> - Users: <%= @stats["users"] %> - Statuses: <%= @stats["statuses"] %>
+  </p>
+<% end %>
 
 <table class="table table-condensed table-hover">
   <thead>
