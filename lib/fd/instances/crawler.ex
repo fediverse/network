@@ -541,32 +541,30 @@ defmodule Fd.Instances.Crawler do
 
   defp process_mastapi_version(string) when is_binary(string) do
     {server, version} = cond do
-      # "universal" compatible (pleroma-like) format: "masto_version; compatible ServerName real_version"
-      # FIXME: it wont work if the server is not in Fd.ServerName
+      # Old misskey
       String.contains?(string, ":compatible:") ->
         [_, server_and_version] = String.split(string, ":compatible:", parts: 2)
         case String.split(server_and_version, [",", " ", ":"], parts: 2) do
-          [server, version] -> {server, clean_string(version)}
+          [server, version] -> {server, version}
           _ -> {nil, server_and_version}
         end
+      # "universal" compatible (pleroma-like) format: "masto_version; compatible ServerName real_version"
+      #                                               "version; compatible ServerName"
       String.contains?(string, "compatible;") ->
-        [_, server_and_version] = String.split(string, "(compatible; ")
+        [main_version, server_and_version] = String.split(string, "(compatible; ")
         case String.split(server_and_version, " ", parts: 2) do
-          [version] -> {nil, clean_string(version)}
-          [server, version] -> {server, clean_string(version)}
+          [server] -> {server, main_version}
+          [server, version] -> {server, version}
         end
       # Old versions of Pleroma
       String.starts_with?(string, "Pleroma") ->
         [_, version] = String.split(string, " ", parts: 2)
-        {"Pleroma", clean_string(version)}
+        {"Pleroma", version}
       string == "Mastodon::Version" -> {"Mastodon", "1.3"}
-      # Kroeg
-      String.contains?(string, "but actually Kroeg") ->
-        {"Kroeg", "pre-alpha"}
       true ->
-        {"Mastodon", clean_string(string)}
+        {"Mastodon", string}
     end
-    {downcase(server), version}
+    {downcase(clean_string(server)), clean_string(version)}
   end
   defp process_mastapi_version(_), do: {"Unknown", nil}
 
@@ -574,6 +572,7 @@ defmodule Fd.Instances.Crawler do
     string
     |> String.trim_trailing(")")
     |> String.trim_trailing(".")
+    |> String.trim_trailing()
   end
 
   #
