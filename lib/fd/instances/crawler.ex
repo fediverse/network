@@ -249,7 +249,7 @@ defmodule Fd.Instances.Crawler do
       server_changed: server_changed?, is_up?: is_up?, was_up?: was_up?, became_open?: became_open?, became_closed?: became_closed?}
 
 
-    unless (crawler.instance.hidden || false) or Map.get(crawler.changes, "server") == 0 do
+    unless Instance.hidden?(crawler.instance) or Map.get(crawler.changes, "server") == 0 do
       if became_up? do
         post("{instance} is back up :)", crawler.instance, [:mon])
       end
@@ -955,7 +955,7 @@ defmodule Fd.Instances.Crawler do
       accounts
     end
 
-    {instance_domain, link} = if instance.hidden do
+    {instance_domain, link} = if Instance.hidden?(instance) do
       {"[private]", nil}
     else
       {Fd.Util.idna(instance.domain), "https://fediverse.network/#{Fd.Util.idna(instance.domain)}"}

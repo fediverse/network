@@ -55,7 +55,7 @@
     </div>
   <% end %>
 <% end %>
-<%= if @instance.hidden do %>
+<%= if Fd.Instances.Instance.hidden?(@instance) do %>
   <div class="alert alert-light">
     <strong>This is a private instance</strong>. <small>Name, domain and links are hidden in lists.</small>
   </div>

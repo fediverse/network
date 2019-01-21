@@ -19,7 +19,7 @@
       <tr>
         <td><span class="badge badge-up-<%= to_string(check.up) %>">&nbsp;</span></td>
         <td>
-          <%= if check.instance.hidden do %>
+          <%= if Fd.Instances.Instance.hidden?(check.instance) do %>
             <i class="text-muted">private</i>
           <% else %>
             <%= link check.instance.domain, to: instance_path(@conn, :show, check.instance) %>

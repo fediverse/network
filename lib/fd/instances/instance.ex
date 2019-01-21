@@ -48,6 +48,14 @@ defmodule Fd.Instances.Instance do
     timestamps()
   end
 
+  def hidden?(%Instance{} = instance) do
+    cond do
+      instance.hidden == true -> true
+      Map.get(instance.settings || %{}, :hidden) == true -> true
+      true -> false
+    end
+  end
+
   @doc false
   def changeset(%Instance{} = instance, attrs) do
     instance

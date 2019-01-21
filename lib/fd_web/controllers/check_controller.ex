@@ -34,6 +34,7 @@ defmodule FdWeb.CheckController do
     conn
     |> assign(:section, "checks")
     |> assign(:title, "Checks on #{instance.domain} #{title}")
+    |> assign(:private, Instances.Instance.hidden?(instance))
     |> render("show.html", checks: checks, instance: instance, range?: range?, from_time: from_time, to_time: to_time)
   end
 

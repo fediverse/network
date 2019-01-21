@@ -146,7 +146,7 @@ defmodule FdWeb.InstanceController do
     instance = Instances.get_instance_by_domain!(id)
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} Federation Restrictions")
-    |> assign(:private, instance.hidden)
+    |> assign(:private, Instances.Instance.hidden?(instance))
     |> assign(:section, "federation")
     |> render(FdWeb.InstanceFederationView, "show.html", instance: instance)
   end
@@ -196,7 +196,7 @@ defmodule FdWeb.InstanceController do
 
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} - #{Fd.ServerName.from_int(instance.server)}")
-    |> assign(:private, instance.hidden)
+    |> assign(:private, Instances.Instance.hidden?(instance))
     |> assign(:section, "summary")
     |> render("show.html", instance: instance, last_up_check: last_up_check, checks: checks, host_stats: host_stats, stats: stats)
   end
@@ -208,7 +208,7 @@ defmodule FdWeb.InstanceController do
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} statistics")
     |> assign(:section, "stats")
-    |> assign(:private, instance.hidden)
+    |> assign(:private, Instances.Instance.hidden?(instance))
     |> render("stats.html", instance: instance, stats: stats)
   end
 
@@ -219,7 +219,7 @@ defmodule FdWeb.InstanceController do
     conn
     |> assign(:title, "#{Fd.Util.idna(instance.domain)} checks")
     |> assign(:section, "checks")
-    |> assign(:private, instance.hidden)
+    |> assign(:private, Instances.Instance.hidden?(instance))
     |> render("checks.html", instance: instance, checks: checks)
   end
 
@@ -229,7 +229,7 @@ defmodule FdWeb.InstanceController do
     if instance.nodeinfo && !Enum.empty?(instance.nodeinfo) do
       conn
       |> assign(:title, "#{Fd.Util.idna(instance.domain)} nodeinfo")
-      |> assign(:private, instance.hidden)
+      |> assign(:private, Instances.Instance.hidden?(instance))
       |> render("nodeinfo.html", instance: instance)
     else
       conn
@@ -257,7 +257,7 @@ defmodule FdWeb.InstanceController do
     instances = Enum.reduce(filters, from(i in Instance), &basic_filter_reduce/2)
     |> select([q], %Instance{id: q.id, domain: q.domain, up: q.up, server: q.server, statuses: q.statuses, users: q.users,
       peers: q.peers, emojis: q.emojis, hidden: q.hidden, signup: q.signup, dead: q.dead, version: q.version,
-      inserted_at: q.inserted_at, max_chars: q.max_chars})
+      inserted_at: q.inserted_at, max_chars: q.max_chars, settings: q.settings})
     |> Fd.Repo.all
 
     {instances, filters, Fd.GlobalStats.get()}

@@ -35,6 +35,8 @@ defmodule Fd.ServerName do
     31  => "Wordpress",
     32  => "Nextcloud",
     33  => "diaspora",
+    34  => "social.seattle.wa.us-relay",
+    35  => "speechmore",
   }
   @server_data %{
     0 => %{
@@ -279,6 +281,17 @@ defmodule Fd.ServerName do
       slug: "diaspora",
       hidden: true,
       ignore_stats: true,
+    },
+    34 => %{
+      name: "Seattle Relay",
+      slug: "social.seattle.wa.us-relay",
+      source: "https://gitlab.com/jankysolutions/social.seattle.wa.us/relay",
+    },
+    35 => %{
+      name: "SpeechMore",
+      slug: "speechmore",
+      source: false,
+      link: "https://speechmore.ml/",
     }
   }
 

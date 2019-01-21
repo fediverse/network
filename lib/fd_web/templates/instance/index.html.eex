@@ -79,11 +79,11 @@
       <td><span class="badge badge-up-<%= to_string(instance.up) %>">&nbsp;</span></td>
       <td>
         <%= if @filters["statuses"] || @filters["users"], do: [to_string(idx+1), ".", raw("&nbsp;")]%>
-        <%= if instance.hidden do %>
-        <i class="text-muted">private</i>
-      <% else %>
-        <%= link name(instance), to: instance_path(@conn, :show, instance) %>
-      <% end %>
+        <%= if Fd.Instances.Instance.hidden?(instance) do %>
+          <i class="text-muted">private</i>
+        <% else %>
+          <%= link name(instance), to: instance_path(@conn, :show, instance) %>
+        <% end %>
       <%= if instance.dead, do: content_tag(:sup, "☨") %>
       <%= if instance.monitor, do: content_tag(:sup, raw("&#128065;")) %>
       </td>
