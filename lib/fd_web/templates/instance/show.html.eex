@@ -185,7 +185,7 @@
 <% end %>
 
 <%= if @checks do %>
-  <h4>Availablity
+  <h4>Availability
     <%= if avail = Fd.Instances.get_uptime_percentage(@instance.id) do %>
       <%= Float.floor(Fd.Instances.get_uptime_percentage(@instance.id))%>%
       <small><small class="text-muted">(last 31 days)</small></small>
